@@ -1,4 +1,5 @@
 # mycrews/qrew/utils/error_utils.py
+from typing import Optional # Added for Optional type hint
 
 class ErrorSummary:
     def __init__(self, error_message: Optional[str] = None, suggestions: Optional[list[str]] = None): # Made error_message optional
