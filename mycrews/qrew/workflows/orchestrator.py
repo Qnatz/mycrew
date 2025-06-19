@@ -210,21 +210,17 @@ class WorkflowOrchestrator:
     # The diff will show this as a deletion of the block.
 
     def run_taskmaster_workflow(self, inputs: dict):
-        print("Executing Taskmaster workflow...")
-        from ..taskmaster.taskmaster_agent import taskmaster_agent
+        logging.info("Executing Taskmaster workflow...")
+        from ..taskmaster.taskmaster_agent import taskmaster_agent # Corrected import path
         user_request = inputs.get("user_request", "")
         if not user_request:
-            # This case should ideally be handled before calling this workflow,
-            # but as a safeguard:
-            print("Error: No user_request provided to Taskmaster workflow.")
-            # Return a structure that indicates failure or default values
-            # This matches the expected output structure but with error indication.
+            logging.error("No user_request provided to Taskmaster workflow.")
             return {
                 "project_name": "error_no_user_request",
                 "refined_brief": "Taskmaster failed: No user request was provided.",
                 "is_new_project": False,
                 "recommended_next_stage": "architecture",
-                "project_scope": "unknown", # Default fallback
+                "project_scope": "unknown",
                 "taskmaster_error": "No user_request provided"
             }
 
@@ -246,29 +242,32 @@ class WorkflowOrchestrator:
             agent=taskmaster_agent,
             expected_output='A single, valid JSON object. Example: {"project_name": "example_project_name", "refined_brief": "A concise summary of the project...", "is_new_project": true, "recommended_next_stage": "architecture", "project_scope": "web-only"}',
             guardrail=validate_taskmaster_output,
-            max_retries=1 # Keep retries low for faster failure if guardrail fails
+            max_retries=1
         )
 
-        # Create a temporary crew to execute this task
-        # The llm for the crew will be inherited from the agent if not specified,
-        # or we can assign the orchestrator's default llm if it had one.
-        # For now, relying on agent's LLM.
         task_crew = Crew(
             agents=[taskmaster_agent],
             tasks=[taskmaster_task],
-            verbose=True # Or False, depending on desired logging level
+            verbose=True # Keep verbose for development/debugging, can be False in production
         )
+        logging.info(f"Kicking off Taskmaster crew for request: '{user_request[:100]}...'")
+        try:
+            crew_kickoff_result = task_crew.kickoff()
+        except Exception as e:
+            logging.error(f"Taskmaster crew kickoff failed: {e}", exc_info=True)
+            # This exception could be due to guardrail failure after retries, or other issues.
+            return {
+                "project_name": "error_taskmaster_kickoff_exception",
+                "refined_brief": f"Taskmaster crew kickoff failed with exception: {e}",
+                "is_new_project": False,
+                "recommended_next_stage": "architecture",
+                "project_scope": "unknown",
+                "taskmaster_error": f"Kickoff exception: {e}"
+            }
 
-        crew_kickoff_result = task_crew.kickoff() # This line can raise an Exception if guardrail fails after retries
-
-        # If kickoff() completes without an exception, it means the task (and its guardrail) was successful.
-        # The guardrail 'validate_taskmaster_output' validated the raw JSON string.
-        # The 'taskmaster_task.output' attribute should hold the TaskOutput object for this task.
-        # The raw JSON string that passed the guardrail should be on this TaskOutput object.
 
         if not (hasattr(taskmaster_task, 'output') and taskmaster_task.output is not None):
-            # This would be highly unexpected if kickoff() succeeded without error.
-            print(f"Taskmaster task completed kickoff but task.output is missing or None.")
+            logging.error("Taskmaster task completed kickoff but task.output is missing or None.")
             return {
                 "project_name": "error_task_no_output_attr",
                 "refined_brief": "Taskmaster task completed kickoff but its .output attribute was not set.",
@@ -278,29 +277,19 @@ class WorkflowOrchestrator:
                 "taskmaster_error": "Task .output attribute missing after kickoff"
             }
 
-        # According to user log: `taskmaster_task.output` is a TaskOutput object.
-        # The "Value" in the log message `got: TaskOutput. Value: 'JSON_STRING'`
-        # suggests that the string representation of this TaskOutput object might be the JSON string,
-        # or more reliably, its `.raw` or `.exported_output` attribute.
-
         final_json_string = None
         if isinstance(taskmaster_task.output, str):
-            # This would be the ideal case if CrewAI directly placed the validated raw string here.
             final_json_string = taskmaster_task.output
-            print(f"Taskmaster task.output is a string.")
+            logging.info("Taskmaster task.output is a string.")
         elif hasattr(taskmaster_task.output, 'raw') and isinstance(taskmaster_task.output.raw, str):
-            # If taskmaster_task.output is a TaskOutput object, its .raw attribute should have the string.
             final_json_string = taskmaster_task.output.raw
-            print(f"Taskmaster task.output is a TaskOutput object, using its .raw attribute.")
+            logging.info("Taskmaster task.output is a TaskOutput object, using its .raw attribute.")
         elif hasattr(taskmaster_task.output, 'exported_output') and isinstance(taskmaster_task.output.exported_output, str):
-            # Fallback to exported_output if raw isn't what we expect
             final_json_string = taskmaster_task.output.exported_output
-            print(f"Taskmaster task.output is a TaskOutput object, using its .exported_output attribute.")
+            logging.info("Taskmaster task.output is a TaskOutput object, using its .exported_output attribute.")
         else:
-            # If it's neither a string, nor a TaskOutput object with a .raw/.exported_output string,
-            # then we have a problem.
             actual_output_type = type(taskmaster_task.output).__name__
-            print(f"Taskmaster task.output is of unexpected type: {actual_output_type}. Value: '{str(taskmaster_task.output)}'")
+            logging.error(f"Taskmaster task.output is of unexpected type: {actual_output_type}. Value: '{str(taskmaster_task.output)}'")
             return {
                 "project_name": "error_task_output_unexpected_structure",
                 "refined_brief": f"Taskmaster task.output was of an unexpected type or structure: {actual_output_type}. Value: '{str(taskmaster_task.output)}'",
@@ -312,13 +301,11 @@ class WorkflowOrchestrator:
 
         if final_json_string:
             try:
-                # The guardrail already validated this string, so json.loads should succeed.
                 parsed_data = json.loads(final_json_string)
-                print(f"Taskmaster workflow successful. Parsed output from task.output's string content: {parsed_data}")
+                logging.info(f"Taskmaster workflow successful. Parsed output: {parsed_data}")
                 return parsed_data
             except json.JSONDecodeError as e:
-                # This should ideally not happen if the guardrail worked.
-                print(f"Taskmaster: Failed to parse JSON from task.output's string content, even after guardrail. Error: {e}. String was: '{final_json_string}'")
+                logging.error(f"Taskmaster: Failed to parse JSON from task.output's string content, even after guardrail. Error: {e}. String was: '{final_json_string}'", exc_info=True)
                 return {
                     "project_name": "error_final_json_parse_failed",
                     "refined_brief": f"Taskmaster: Post-guardrail JSON parsing failed. String: '{final_json_string}'. Error: {e}",
@@ -328,8 +315,7 @@ class WorkflowOrchestrator:
                     "taskmaster_error": "Final JSON parsing failed after guardrail"
                 }
         else:
-            # Should have been caught by the type checks above.
-            print(f"Taskmaster: Could not extract a final JSON string from task.output. Type was {type(taskmaster_task.output).__name__}.")
+            logging.error(f"Taskmaster: Could not extract a final JSON string from task.output. Type was {type(taskmaster_task.output).__name__}.")
             return {
                 "project_name": "error_no_final_json_string",
                 "refined_brief": "Taskmaster: Could not extract final JSON string from task output.",
@@ -341,8 +327,10 @@ class WorkflowOrchestrator:
 
     def execute_pipeline(self, initial_inputs: dict, mock_taskmaster_output: Optional[dict] = None):
         current_artifacts = {}
+        # Ensure logging is configured
+        # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-        # Define the full sequence of possible stages
+
         defined_pipeline_stages = [
             "taskmaster",
             "tech_vetting",
@@ -350,47 +338,43 @@ class WorkflowOrchestrator:
             "crew_assignment",
             "subagent_execution",
             "final_assembly",
-            "persist_generated_code" # New stage
+            "persist_generated_code"
         ]
 
         stages_to_run = []
         next_stage_index = 0
 
         if mock_taskmaster_output and self.state is None:
-            print("DEBUG: Using MOCKED Taskmaster output.")
+            logging.debug("Using MOCKED Taskmaster output.")
             taskmaster_output = mock_taskmaster_output
             current_artifacts["taskmaster"] = taskmaster_output
-            # Initialize self.state here using project_name from mock_taskmaster_output
             actual_project_name = taskmaster_output.get("project_name")
             if not actual_project_name or not isinstance(actual_project_name, str):
-                print("ERROR: Mocked Taskmaster output missing or invalid 'project_name'. Cannot proceed.")
-                # Return an error structure or raise an exception
+                logging.error("Mocked Taskmaster output missing or invalid 'project_name'. Cannot proceed.")
                 return {"error": "Mocked Taskmaster output missing or invalid project_name"}
             self.state = ProjectStateManager(actual_project_name)
-            self.state.start_stage("taskmaster") # Mark as started
-            self.state.complete_stage("taskmaster", artifacts=taskmaster_output) # Mark as completed with mock data
-            initial_inputs["project_name"] = actual_project_name # Update initial_inputs for subsequent stages
-            # Determine stages_to_run based on mock_taskmaster_output
+            self.state.start_stage("taskmaster")
+            self.state.complete_stage("taskmaster", artifacts=taskmaster_output)
+            initial_inputs["project_name"] = actual_project_name
             recommended_next = taskmaster_output.get("recommended_next_stage", "architecture")
-            stages_to_run.append("taskmaster") # Mocked taskmaster is considered 'done'
+            stages_to_run.append("taskmaster")
             if recommended_next == "tech_vetting":
-              stages_to_run.extend(["tech_vetting", "architecture", "crew_assignment", "subagent_execution", "final_assembly"])
+              stages_to_run.extend(["tech_vetting", "architecture", "crew_assignment", "subagent_execution", "final_assembly", "persist_generated_code"])
             elif recommended_next == "architecture":
-              stages_to_run.extend(["architecture", "crew_assignment", "subagent_execution", "final_assembly"])
+              stages_to_run.extend(["architecture", "crew_assignment", "subagent_execution", "final_assembly", "persist_generated_code"])
             else:
-              print(f"Warning: Unknown recommended next stage '{recommended_next}' in mock. Defaulting to architecture flow.")
-              stages_to_run.extend(["architecture", "crew_assignment", "subagent_execution", "final_assembly"])
-            next_stage_index = 0 # Start iterating from the beginning of stages_to_run (it will skip 'taskmaster')
-        elif self.state is None: # Original block for when state is None (New Project) and no mock
-            print("Orchestrator state not initialized, running actual Taskmaster workflow...")
+              logging.warning(f"Unknown recommended next stage '{recommended_next}' in mock. Defaulting to architecture flow.")
+              stages_to_run.extend(["architecture", "crew_assignment", "subagent_execution", "final_assembly", "persist_generated_code"])
+            next_stage_index = 0
+        elif self.state is None:
+            logging.info("Orchestrator state not initialized, running actual Taskmaster workflow...")
             taskmaster_output = self.run_taskmaster_workflow(initial_inputs)
             current_artifacts["taskmaster"] = taskmaster_output
 
             if "taskmaster_error" in taskmaster_output or "error_" in taskmaster_output.get("project_name", ""):
-                print(f"Error: Taskmaster failed. Output: {taskmaster_output}")
-                # Potentially create a minimal state for error reporting if project_name is usable
+                logging.error(f"Taskmaster failed. Output: {taskmaster_output}")
                 error_project_name = taskmaster_output.get("project_name", "taskmaster_failed_project")
-                if "error_" in error_project_name: error_project_name = "taskmaster_failed_project" # Ensure valid name
+                if "error_" in error_project_name: error_project_name = "taskmaster_failed_project"
                 self.state = ProjectStateManager(error_project_name)
                 self.state.fail_stage("taskmaster", taskmaster_output.get("refined_brief", "Taskmaster critical failure"))
                 # No further stages will run. Report will be generated at the end.

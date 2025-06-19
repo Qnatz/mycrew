@@ -134,24 +134,41 @@ def run_qrew():
     # display_model_initialization_status("[bold cyan]--- Other Model Initialization ---[/bold cyan]", [("Embedding Model", True), ("Another Model", False)])
 
     # --- Configure RAG Tools ---
-    # Define knowledge base configurations
-    # Paths are relative and will be resolved based on the execution context.
+    # Define knowledge base configurations. Paths should be relative to this script's directory.
+    # main_script_dir is already defined above in the logger test section.
+    # If not, it would be: main_script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct paths relative to the 'mycrews/qrew/' directory (which is main_script_dir)
+    # The knowledge folder is expected to be a sibling of the 'agents', 'tools', etc. folders inside 'qrew'.
+    knowledge_base_root = os.path.join(main_script_dir, "knowledge")
+
     knowledge_base_configs = {
-        'web_components': './knowledge/web_components',
-        'mobile_patterns': './knowledge/mobile_patterns',
-        'api_specs': './knowledge/api_specs',
-        'cloud_templates': './knowledge/cloud_templates'
+        'web_components': os.path.join(knowledge_base_root, 'web_components'),
+        'mobile_patterns': os.path.join(knowledge_base_root, 'mobile_patterns'),
+        'api_specs': os.path.join(knowledge_base_root, 'api_specs'),
+        'cloud_templates': os.path.join(knowledge_base_root, 'cloud_templates')
     }
+
+    # It's good practice to ensure these directories exist if they are critical for RAG tool setup.
+    # However, `configure_rag_tools` might handle their creation or expect them to exist.
+    # For now, we'll just log the paths being used.
+    logging.info(f"Knowledge base paths configured as: {json.dumps(knowledge_base_configs, indent=2)}")
+
     try:
         print("\nConfiguring RAG tools...")
+        # It's assumed that configure_rag_tools can handle absolute paths.
         configure_rag_tools(knowledge_base_configs)
         print("RAG tools configuration process initiated.")
     except Exception as e:
         print(f"Error during RAG tool configuration: {e}")
+        logging.error(f"Error during RAG tool configuration: {e}", exc_info=True)
         # Decide if this should be a critical error or just a warning
 
     # Configure basic logging
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # This is already effectively done by the logger test section, but let's ensure
+    # the level is INFO for the application if not set by tests.
+    # If logging is already configured, basicConfig does nothing.
+    logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper(), format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     # Attempt to silence LiteLLM enterprise warnings
     try:
