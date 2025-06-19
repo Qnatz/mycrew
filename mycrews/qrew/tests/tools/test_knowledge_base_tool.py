@@ -153,11 +153,26 @@ class TestKnowledgeBaseTool(unittest.TestCase):
 
         # Verify that the mocked tokenizer and session were used as expected
         self.mock_tokenizer.encode.assert_called_with(text_to_embed)
-        self.mock_onnx_session.run.assert_called_with(None, {
+
+        # Check the call to onnx_session.run carefully for numpy arrays
+        self.mock_onnx_session.run.assert_called_once() # Ensure it was called
+        args, kwargs = self.mock_onnx_session.run.call_args
+
+        self.assertIsNone(args[0], "First argument to onnx_session.run should be None")
+
+        expected_inputs = {
             "input_ids": np.array([[1,2,3]], dtype=np.int64),
             "attention_mask": np.array([[1,1,1]], dtype=np.int64),
             "token_type_ids": np.array([[0,0,0]], dtype=np.int64)
-        })
+        }
+        actual_inputs = args[1] # The dictionary of inputs
+
+        self.assertIsInstance(actual_inputs, dict, "Second argument to onnx_session.run should be a dict")
+        self.assertEqual(set(actual_inputs.keys()), set(expected_inputs.keys()), "Input keys mismatch")
+
+        for key in expected_inputs:
+            self.assertTrue(np.array_equal(actual_inputs[key], expected_inputs[key]),
+                            f"Numpy array for input '{key}' does not match.")
 
     @patch.object(KnowledgeBaseTool, '_embed_text')
     def test_run_with_dict_input(self, mock_embed_text):

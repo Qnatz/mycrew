@@ -99,16 +99,24 @@ class TestLLMConfiguration(unittest.TestCase):
         MockLLM.reset_mock()
 
         # Scenario 2: OpenAI model, OPENAI_API_KEY missing
-        agent_id_openai = "openai_powered_summarizer" # Assumes this uses an OpenAI model first
-        # Ensure MODEL_BY_AGENT has this entry for the test to be meaningful
-        if agent_id_openai not in MODEL_BY_AGENT:
-            MODEL_BY_AGENT[agent_id_openai] = [CFG_OPENAI_GPT4O_DEFAULT] # Temporarily add for test if not present
+        agent_id_openai = "openai_powered_summarizer"
+
+        original_openai_summarizer_config = MODEL_BY_AGENT.get(agent_id_openai)
+        # For this specific test, ensure the agent only attempts to use OpenAI models
+        MODEL_BY_AGENT[agent_id_openai] = [CFG_OPENAI_GPT4O_DETERMINISTIC]
 
         os.environ.pop("OPENAI_API_KEY", None)
         os.environ["GEMINI_API_KEY"] = "dummy_gemini_key" # Gemini key present, but OpenAI key missing
 
         llm_instance_openai = get_llm_for_agent(agent_id_openai)
-        self.assertIsNone(llm_instance_openai, f"LLM for {agent_id_openai} should be None when OPENAI_API_KEY is missing.")
+
+        # Restore original config for other tests
+        if original_openai_summarizer_config is not None:
+            MODEL_BY_AGENT[agent_id_openai] = original_openai_summarizer_config
+        elif agent_id_openai in MODEL_BY_AGENT: # If it was added just for this test scenario (unlikely given current setup)
+            del MODEL_BY_AGENT[agent_id_openai]
+
+        self.assertIsNone(llm_instance_openai, f"LLM for {agent_id_openai} should be None when OPENAI_API_KEY is missing and no fallback is intended for this test.")
         # Check if the status log indicates a missing key for an OpenAI model
         self.assertTrue(any("API_KEY_MISSING_FOR_MODEL_gpt" in status[0] and not status[1] for status in llm_initialization_statuses),
                         "Missing OpenAI API key status not logged correctly for summarizer.")

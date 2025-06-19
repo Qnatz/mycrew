@@ -123,7 +123,8 @@ class TestProjectStateManagerListProjects(unittest.TestCase):
         """Test the sorting order of listed projects."""
         self._create_project_dir("proj_c_completed", {"status": "completed", "project_name": "C Completed"})
         self._create_project_dir("proj_a_failed", {"status": "failed", "project_name": "A Failed"})
-        self._create_project_dir("proj_e_error_missing", {"project_name": "E Error Missing"}) # No state file
+        # Correctly simulate a missing state file by not passing state_content
+        self._create_project_dir("proj_e_error_missing_state_file") # Name will be derived: "Proj E Error Missing State File"
         self._create_project_dir("proj_b_inprogress", {"status": "in_progress", "project_name": "B In Progress"})
         self._create_project_dir("proj_d_unknown", {"status": "unknown", "project_name": "D Unknown"})
 
@@ -132,7 +133,8 @@ class TestProjectStateManagerListProjects(unittest.TestCase):
         self.assertEqual(len(projects), 5)
         # Expected order: Failed, Errors, Completed, Unknown, Others (like in_progress)
         self.assertEqual(projects[0]["name"], "A Failed")           # status: failed (sort key 0)
-        self.assertEqual(projects[1]["name"], "E Error Missing")    # status: Error - State file missing (sort key 1)
+        # Name is derived from directory "proj_e_error_missing_state_file" -> "Proj E Error Missing State File"
+        self.assertEqual(projects[1]["name"], "Proj E Error Missing State File") # status: Error - State file missing (sort key 1)
         self.assertEqual(projects[2]["name"], "C Completed")        # status: completed (sort key 2)
         self.assertEqual(projects[3]["name"], "D Unknown")          # status: unknown (sort key 3)
         self.assertEqual(projects[4]["name"], "B In Progress")      # status: in_progress (sort key 4)

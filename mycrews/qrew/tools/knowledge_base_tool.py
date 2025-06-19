@@ -43,11 +43,16 @@ class KnowledgeBaseTool(BaseTool): # Renamed from EnhancedKnowledgeBaseTool
         try:
             os.makedirs(kb_persist_path, exist_ok=True)
             self.kb_client = chromadb.PersistentClient(path=kb_persist_path, settings=Settings(allow_reset=False))
+
+            logger.info(f"DEBUG: Type of self before get_or_create_collection: {type(self)}")
+            logger.info(f"DEBUG: Type of self.__call__ before get_or_create_collection: {type(self.__call__)}")
+
             # The embedding_function is set to self, so this class needs a __call__ method.
-            self.kb_collection = self.kb_client.get_or_create_collection(name="knowledge_base", embedding_function=self)
+            # Trying self.__call__ directly
+            self.kb_collection = self.kb_client.get_or_create_collection(name="knowledge_base", embedding_function=self.__call__)
             logger.info(f"ChromaDB client initialized for knowledge base at {kb_persist_path}")
         except Exception as e:
-            logger.error(f"Failed to initialize ChromaDB for knowledge base: {str(e)}")
+            logger.error(f"Failed to initialize ChromaDB for knowledge base: {str(e)}", exc_info=True)
             self.kb_client = None
             self.kb_collection = None
 
