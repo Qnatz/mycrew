@@ -1,7 +1,7 @@
 from crewai import Agent
 # Corrected import: Use get_llm_for_agent from the main llm_config module
-# Path should be relative to mycrews/qrew/
-from ...llm_config import get_llm_for_agent
+# Using absolute import path based on project structure
+from mycrews.qrew.llm_config import get_llm_for_agent
 from mycrews.qrew.tools.agenttools import get_tools_for_agent, AgentName
 
 # Use the agent's role or a unique key for the lookup
