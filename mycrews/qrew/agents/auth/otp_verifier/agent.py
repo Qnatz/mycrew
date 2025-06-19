@@ -1,10 +1,13 @@
 from crewai import Agent
-from ....utils.llm_factory import get_llm # Adjusted path
+# Corrected import: Use get_llm_for_agent from the main llm_config module
+# Path should be relative to mycrews/qrew/
+from ...llm_config import get_llm_for_agent
 from mycrews.qrew.tools.agenttools import get_tools_for_agent, AgentName
 
 # Use the agent's role or a unique key for the lookup
-agent_identifier = "otp_verifier_agent" # Matching the key in MODEL_BY_AGENT
-specific_llm = get_llm(agent_identifier=agent_identifier)
+agent_identifier = "otp_verifier_agent" # This should match a key in MODEL_BY_AGENT in llm_config.py
+# Call the correct function with the correct parameter name
+specific_llm = get_llm_for_agent(agent_identifier=agent_identifier)
 
 otp_verifier_agent = Agent(
     role="OTP Verifier",
