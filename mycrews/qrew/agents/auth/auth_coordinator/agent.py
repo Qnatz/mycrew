@@ -1,5 +1,5 @@
 from crewai import Agent
-from ...llm_config import get_llm_for_agent # Point to the main llm_config.py
+from ....llm_config import get_llm_for_agent # Point to the main llm_config.py
 # Removed: from ....tools.knowledge_base_tool import knowledge_base_tool_instance
 from mycrews.qrew.tools.agenttools import get_tools_for_agent, AgentName
 
