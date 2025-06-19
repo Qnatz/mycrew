@@ -1,0 +1,25 @@
+tasks:
+  - description: >
+      Develop a two-way data synchronization process between the local offline database and the central {backend_database_name} database for {data_entity_names}.
+      Handle conflict resolution using a {conflict_resolution_strategy} (e.g., last-write-wins, user-prompt).
+    expected_output: >
+      A robust data synchronization mechanism.
+      Data consistency maintained between local and remote stores.
+      Clear logging of sync operations and conflict resolutions.
+    agent: offline_sync_agent # Note: agent name updated for clarity
+
+  - description: >
+      Implement background synchronization that triggers automatically when the device regains network connectivity.
+      Optimize for battery life and data usage.
+    expected_output: >
+      Background sync service that reliably syncs data when online.
+      User-configurable settings for sync frequency or triggers (optional).
+    agent: offline_sync_agent
+
+  - description: >
+      Provide users with visibility into the synchronization status (e.g., last synced time, pending uploads/downloads, errors).
+      Allow users to manually trigger a sync if needed.
+    expected_output: >
+      UI components or notifications displaying sync status.
+      A manual sync initiation option for the user.
+    agent: offline_sync_agent

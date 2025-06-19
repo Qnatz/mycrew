@@ -1,0 +1,34 @@
+tasks:
+  - description: >
+      Plan the development cycle for the backend components of {project_name} focusing on {specific_microservice_or_module}.
+      Break down {feature_list} into detailed tasks for the BackendDevelopmentCrew (e.g., API endpoint creation, database schema changes, authentication logic).
+      Input: {project_name}, {specific_microservice_or_module}, {feature_list}, {technical_specifications}.
+    expected_output: >
+      A detailed development plan for the backend components, including:
+      - Task breakdown for API development, database modeling, business logic, etc.
+      - Estimated effort and timelines for each task.
+      - Dependencies between tasks and other system components.
+      - Assignments to relevant backend agents/specialists.
+    agent: backend_project_coordinator_agent
+
+  - description: >
+      Monitor the implementation of backend services for {project_name}, ensuring adherence to {coding_standards} and {security_protocols}.
+      Track progress against {sprint_goals}, manage technical debt, and coordinate with other teams (e.g., frontend, mobile) for integration.
+    expected_output: >
+      Regular progress reports on backend development, highlighting:
+      - Completion status of tasks and features.
+      - Performance against sprint goals.
+      - Any technical challenges, security concerns, or architectural deviations and their resolutions.
+      - Status of integration with other services.
+    agent: backend_project_coordinator_agent
+
+  - description: >
+      Coordinate the deployment and release of backend service updates for {service_name} to the {target_environment}.
+      Ensure all tests (unit, integration, performance) are passed, rollback plans are in place, and documentation is updated.
+      Liaise with the DevOps team for infrastructure and pipeline support.
+      Input: {service_name}, {target_environment}, {test_results}, {deployment_checklist}.
+    expected_output: >
+      Successful deployment of backend service updates.
+      Post-deployment verification and monitoring plan activated.
+      Updated service documentation and release notes.
+    agent: backend_project_coordinator_agent

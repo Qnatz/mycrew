@@ -1,0 +1,25 @@
+tasks:
+  - description: >
+      Implement local database storage using Room persistence library for storing {data_entity_name} data in the Android app.
+      Define entities, DAOs, and the database class.
+    expected_output: >
+      Room database implementation for {data_entity_name}.
+      CRUD (Create, Read, Update, Delete) operations for the data.
+      Unit tests for database operations.
+    agent: android_storage_agent
+
+  - description: >
+      Manage SharedPreferences for storing user preferences like {preference_key_1} and {preference_key_2}.
+      Provide helper functions to get and set these preferences.
+    expected_output: >
+      Utility class or functions for managing SharedPreferences.
+      User preferences are persisted across app sessions.
+    agent: android_storage_agent
+
+  - description: >
+      Implement file storage for saving user-generated content such as {file_type_examples} (e.g., images, documents) on internal or external storage.
+      Handle file permissions and provide options for users to manage their files.
+    expected_output: >
+      Functionality to save and load user-generated files.
+      Proper handling of storage permissions (e.g., scoped storage).
+    agent: android_storage_agent

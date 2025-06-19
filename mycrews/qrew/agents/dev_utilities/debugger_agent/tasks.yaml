@@ -1,0 +1,26 @@
+tasks:
+  - description: >
+      Investigate and identify the root cause of the bug reported in ticket {ticket_number}: "{bug_description}".
+      The bug is occurring in the {module_name} module.
+    expected_output: >
+      A detailed report explaining the root cause of the bug.
+      Specific line numbers or code sections responsible for the bug.
+      Steps to reproduce the bug.
+    agent: debugger_agent
+
+  - description: >
+      Fix the bug identified in {file_path} at line {line_number}.
+      The bug causes {erroneous_behavior}. Implement a solution and verify it.
+    expected_output: >
+      A code patch or pull request with the bug fix.
+      Confirmation that the fix resolves the erroneous behavior.
+      New unit tests to cover the bug scenario.
+    agent: debugger_agent
+
+  - description: >
+      Analyze the memory leak occurring in the {application_process_name} process.
+      Use profiling tools to identify the source of the leak and suggest a fix.
+    expected_output: >
+      A report detailing the memory leak analysis, including a Gc dump or profiler output.
+      Specific recommendations or code changes to resolve the leak.
+    agent: debugger_agent

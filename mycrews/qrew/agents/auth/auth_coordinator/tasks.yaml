@@ -1,0 +1,24 @@
+tasks:
+  - description: >
+      Coordinate the overall user authentication process, ensuring all necessary steps are completed securely and efficiently.
+      This includes delegating tasks to other specialized authentication agents like OTP verifiers or biometric scanners.
+    expected_output: >
+      A successful user authentication event logged, or a clear error message if authentication fails.
+      The system should reflect the user's authenticated state.
+    agent: auth_coordinator_agent # Assuming the agent is defined in an agents.yaml or directly in code
+
+  - description: >
+      Oversee the user authorization process after successful authentication.
+      Determine user roles and permissions and grant access to appropriate resources and functionalities.
+    expected_output: >
+      User granted appropriate access levels and permissions based on their role.
+      Access control lists or similar mechanisms updated accordingly.
+    agent: auth_coordinator_agent
+
+  - description: >
+      Manage and update authentication policies and configurations.
+      This includes password policies, multi-factor authentication (MFA) settings, and session management rules.
+    expected_output: >
+      Authentication policies and configurations are up-to-date and enforced throughout the system.
+      Documentation of current policies is available.
+    agent: auth_coordinator_agent

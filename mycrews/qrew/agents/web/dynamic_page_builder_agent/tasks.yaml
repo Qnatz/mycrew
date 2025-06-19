@@ -1,0 +1,26 @@
+tasks:
+  - description: >
+      Develop a dynamic product listing page for an e-commerce site using {frontend_framework} (e.g., React, Vue, Angular) and a backend API at {api_endpoint}.
+      The page should allow filtering by {filter_criteria} and sorting by {sort_options}.
+    expected_output: >
+      A functional product listing page with dynamic data loading, filtering, and sorting.
+      Source code for the frontend components and service integrations.
+    agent: dynamic_page_builder_agent
+
+  - description: >
+      Implement user authentication (login and registration) for the web application at {app_url} using {backend_auth_service_url}.
+      Create forms, handle user input, and manage session/token storage.
+    expected_output: >
+      Login and registration pages/components.
+      Secure handling of user credentials and sessions.
+      Protected routes that require authentication.
+    agent: dynamic_page_builder_agent
+
+  - description: >
+      Build an interactive dashboard to display {data_to_visualize} using a charting library like {charting_library_name} (e.g., Chart.js, D3.js).
+      Data will be fetched from {data_source_api_url}.
+      The dashboard should allow users to {dashboard_interactions}.
+    expected_output: >
+      A web page with an interactive dashboard displaying the specified data visualizations.
+      User interface elements for interactions as defined.
+    agent: dynamic_page_builder_agent

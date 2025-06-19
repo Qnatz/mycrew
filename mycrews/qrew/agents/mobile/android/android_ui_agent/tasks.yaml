@@ -1,0 +1,26 @@
+tasks:
+  - description: >
+      Develop the UI for the {screen_name} screen in the Android app using Jetpack Compose or XML layouts.
+      The screen should display {information_to_display} and allow users to perform {user_actions}.
+    expected_output: >
+      UI code (Compose functions or XML layout files) for the {screen_name} screen.
+      The UI should match the provided design mockups (if any).
+      Basic UI tests.
+    agent: android_ui_agent
+
+  - description: >
+      Implement navigation between {screen_A_name} and {screen_B_name} using the Android Navigation Component.
+      Pass {data_to_pass} between the screens.
+    expected_output: >
+      Navigation graph updated to include navigation paths.
+      Code to trigger navigation and handle data passing.
+    agent: android_ui_agent
+
+  - description: >
+      Create a custom Android View or Composable for {custom_component_description} (e.g., a circular progress bar with text).
+      The component should be reusable and customizable.
+    expected_output: >
+      Source code for the custom View or Composable.
+      Documentation on how to use and customize the component.
+      Examples of the component in use.
+    agent: android_ui_agent

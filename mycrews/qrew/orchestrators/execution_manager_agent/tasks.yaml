@@ -1,0 +1,37 @@
+tasks:
+  - description: >
+      Decompose the {project_plan_url} into major phases and assign them to the appropriate Lead Agents
+      (e.g., WebProjectCoordinator, BackendProjectCoordinator, MobileProjectCoordinator, etc.) or specialized crews.
+      Define clear objectives, deliverables, and timelines for each phase.
+      Input: {project_plan_url}, {available_lead_agents_and_crews_map}.
+    expected_output: >
+      A phased execution plan detailing:
+      - Each project phase and its objectives.
+      - Assigned Lead Agent or Crew for each phase.
+      - Key deliverables and deadlines for each phase.
+      - Dependencies between phases.
+    agent: execution_manager_agent
+
+  - description: >
+      Monitor the overall execution progress of {project_name} against {key_milestones} and the {execution_timeline}.
+      Receive regular updates from Lead Agents. Identify cross-crew dependencies, risks, or bottlenecks.
+      Facilitate inter-crew communication and problem resolution.
+    expected_output: >
+      Comprehensive project status reports, including:
+      - Progress towards key milestones.
+      - Performance of different crews/lead agents.
+      - Identified risks and mitigation strategies.
+      - Adjustments to the execution plan if necessary.
+    agent: execution_manager_agent
+
+  - description: >
+      Manage changes to the project scope or timeline for {project_name}.
+      Assess the impact of {change_request_details} on different crews and the overall execution plan.
+      Coordinate with Lead Agents to adjust assignments and timelines accordingly.
+      Communicate changes to all relevant stakeholders.
+      Input: {project_name}, {change_request_details}, {impact_assessment_template}.
+    expected_output: >
+      An updated project execution plan reflecting the approved changes.
+      Clear communication of changes to all stakeholders and affected teams.
+      Revised timelines and resource allocations if needed.
+    agent: execution_manager_agent

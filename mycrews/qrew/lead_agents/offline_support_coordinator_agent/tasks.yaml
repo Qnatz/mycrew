@@ -1,0 +1,36 @@
+tasks:
+  - description: >
+      Plan the implementation of offline support features for {application_name} based on {offline_requirements}.
+      Define tasks for the OfflineSupportCrew, such as setting up local databases, implementing data sync logic,
+      and ensuring graceful degradation when offline.
+      Input: {application_name}, {offline_requirements}, {data_models_for_offline_storage}.
+    expected_output: >
+      A detailed plan for implementing offline support in {application_name}, including:
+      - Task breakdown for local storage setup and data synchronization.
+      - Choice of offline storage technology and sync strategies.
+      - Design for handling offline data access and UI state.
+      - Estimated timelines and resource needs.
+    agent: offline_support_coordinator_agent
+
+  - description: >
+      Oversee the development and testing of offline capabilities by the OfflineSupportCrew for {application_name}.
+      Ensure data consistency between local and server stores, robust error handling for sync operations,
+      and efficient use of local storage.
+      Input: {application_name}, {current_offline_features_in_dev}.
+    expected_output: >
+      Regular progress reports on offline feature development, including:
+      - Status of local database implementation and sync logic.
+      - Results of offline behavior testing and data consistency checks.
+      - Any identified issues (e.g., sync conflicts, storage limitations) and their resolutions.
+    agent: offline_support_coordinator_agent
+
+  - description: >
+      Coordinate the rollout and user feedback collection for offline features in {application_name}.
+      Ensure users understand how offline mode works and gather feedback on its usability and reliability.
+      Work with QA to define test cases for various network conditions.
+      Input: {application_name}, {user_documentation_for_offline_mode}, {feedback_collection_plan}.
+    expected_output: >
+      Successful rollout of offline features.
+      A summary of user feedback and reported issues related to offline mode.
+      Updated test plans incorporating diverse network scenarios.
+    agent: offline_support_coordinator_agent

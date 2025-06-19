@@ -1,0 +1,160 @@
+import sys
+import os
+import json
+from pathlib import Path
+
+# Add the project root (/app) to sys.path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+# Add the project's src directory to sys.path to allow 'from crewai import ...'
+project_src_path = os.path.join(project_root, "src")
+if project_src_path not in sys.path:
+    sys.path.insert(1, project_src_path) # Insert after project_root
+
+# Ensure the llm_config is loaded first to set up the default LLM
+from .llm_config import default_llm # llm_config.py is now in the same directory
+from . import config as crew_config # This will execute config.py and set Task.DEFAULT_SCHEMA
+
+# LITELLM_DEBUG is now primarily managed by main.py or environment settings
+# os.environ["LITELLM_DEBUG"] = "1" # Set to "0" or remove for less verbose output in production
+
+from .workflows.orchestrator import WorkflowOrchestrator
+from .project_manager import ProjectStateManager
+# Removed direct import of taskmaster_agent as it's handled by orchestrator's workflow
+# from .taskmaster import taskmaster_agent
+# from crewai import Task, Crew, Process # No longer creating ad-hoc crews here
+
+def run_qrew():
+    print("Initializing Qrew System with Project State Management...")
+
+    project_name = "FitnessTrackerApp" # Default project name
+    print(f"\nStarting project: {project_name}")
+
+    try:
+        state = ProjectStateManager(project_name)
+        resume_point = state.resume_point()
+
+        if resume_point:
+            print(f"Resuming existing project '{project_name}' at stage: {resume_point}")
+        else:
+            # This case means either the project is new or already completed.
+            # ProjectStateManager.resume_point() returns None if status is "completed".
+            if state.state.get("status") == "completed":
+                 print(f"Project '{project_name}' is already marked as completed.")
+                 state.get_summary().print()
+                 # Optionally, still show final artifacts if needed
+                 project_path_str = state.project_info.get("path")
+                 if project_path_str:
+                    project_path = Path(project_path_str)
+                    final_output_file = project_path / "final_output.json"
+                    if final_output_file.exists():
+                        print("Previously generated final output:")
+                        print(json.loads(final_output_file.read_text()))
+                 return state.get_artifacts() # Or some other appropriate return for completed projects
+            else:
+                print(f"Starting new project: {project_name}")
+
+
+        # Define sample variables for the pipeline_inputs
+        # These would typically come from a UI, database, or other external source
+        #sample_user_request = "I need a new mobile app for tracking personal fitness goals. It should be fun and engaging, with social sharing features and personalized workout plans."
+        #sample_project_goal = "Develop a market-leading mobile fitness tracking application that provides a highly engaging user experience and personalized fitness journeys."
+        #sample_priority = "High"
+        sample_user_request = "I need a simple and engaging app where I can view, add, and manage interesting locations on a map — like cafes, nature spots, or local attractions — and control who can see them."
+        sample_project_goal = "Develop a modern multi-platform map-based application with backend support, allowing users to create, manage, and explore points of interest with high visual engagement and retention."
+        sample_priority = "Medium-High"
+        sample_stakeholder_feedback = "User retention is key. Gamification is highly desired. Ensure mobile-first design principles are followed. We need to integrate with popular wearable devices."
+        sample_market_research = "Market research indicates strong demand for apps with AI-driven personalization. Competitors X and Y lack robust social features. Emerging trend: mindfulness and mental well-being integration."
+        sample_project_constraints = "The core team has strong Python (backend) and React Native (mobile) skills. Initial deployment target is AWS. Budget for external AI/ML services is moderate. Timeline: 6 months for MVP."
+        sample_technical_vision = "A modular microservices architecture is preferred for scalability and independent development. Prioritize user data privacy and GDPR compliance. Explore serverless functions for event-driven features."
+
+        pipeline_inputs = {
+            "user_request": sample_user_request,
+            "project_goal": sample_project_goal,
+            "priority": sample_priority,
+            "project_name": project_name, # Crucial for orchestrator and state consistency
+            "stakeholder_feedback": sample_stakeholder_feedback,
+            "market_research": sample_market_research, # Corrected key from market_research_data
+            "constraints": sample_project_constraints,
+            "technical_vision": sample_technical_vision
+            # The 'user_idea' or 'project_brief' which previously came from a separate TaskMasterAgent execution
+            # will now be generated by the 'taskmaster' stage within the orchestrator if it's designed to do so.
+            # The `user_request` and other inputs here are the initial seed for that first stage.
+        }
+
+        print(f"\nPipeline Inputs Prepared for project '{project_name}':")
+        # print(json.dumps(pipeline_inputs, indent=2)) # Can be verbose
+
+        orchestrator = WorkflowOrchestrator(project_name) # Orchestrator now takes project_name
+        results = orchestrator.execute_pipeline(pipeline_inputs)
+
+        print("\nProject Execution Attempt Complete for Qrew")
+        print("==========================================")
+
+        # State is managed by orchestrator, which uses ProjectStateManager internally.
+        # We can access the same state instance via the orchestrator if needed, or use the one we created.
+        current_project_state = state.state # Get the latest state
+
+        if current_project_state["status"] == "completed":
+            print(f"Project '{project_name}' completed successfully.")
+            final_output = results.get("final_assembly", results.get("final_output", {})) # Check for common keys
+            print("Final Output Snippet:", str(final_output)[:500] + "..." if final_output else "N/A") # Print a snippet
+
+            project_path_str = state.project_info.get("path")
+            if project_path_str:
+                project_path = Path(project_path_str)
+                project_path.mkdir(parents=True, exist_ok=True) # Ensure directory exists
+
+                output_file_path = project_path / "final_output.json"
+                print(f"Saving all results to: {output_file_path}")
+                with open(output_file_path, "w") as f:
+                    json.dump(results, f, indent=2) # Save all results from pipeline
+
+                # Additionally, save individual artifacts if they exist and are large
+                # For example, if architecture is a large JSON:
+                # if "architecture" in results:
+                #     with open(project_path / "architecture_artifact.json", "w") as f:
+                #         json.dump(results["architecture"], f, indent=2)
+            else:
+                print("Warning: Project path not found in state, cannot save final_output.json.")
+
+        elif current_project_state["status"] == "failed":
+            print(f"Project '{project_name}' failed. Status: {current_project_state['status']}.")
+            print("Check the logs and summary above for details on the failure.")
+        else:
+            print(f"Project '{project_name}' status: {current_project_state['status']}. Not fully completed. Check logs.")
+
+        # The summary is already printed by the orchestrator at the end of its pipeline.
+        # state.get_summary().print() # No need to print again unless desired here.
+
+        return results # Return all results
+
+    except Exception as e:
+        print(f"\nAn critical error occurred during Qrew execution: {e}")
+        import traceback
+        traceback.print_exc() # Print full traceback for critical errors
+
+        # Fallback error handling (original from template)
+        print("\nTroubleshooting Tips (Generic):")
+        print("-------------------------------")
+        error_str = str(e).lower()
+        litellm_model_env = os.environ.get("LITELLM_MODEL", "").lower()
+
+        if "api_key" in error_str or "authentication" in error_str or "permission" in error_str:
+            print("- API key issue or authentication failure detected.")
+            # ... (specific provider messages can be added here as before) ...
+            print("  Ensure relevant API key (e.g., OPENAI_API_KEY, GEMINI_API_KEY, etc.) is set and valid.")
+        elif "model_not_found" in error_str:
+            print(f"- Model ('{litellm_model_env}') not found.")
+            print("  Verify LITELLM_MODEL env var and ensure model availability (local/remote).")
+        elif "context_length" in error_str or "context_window" in error_str:
+            print("- Input prompt too long for model's context window.")
+        else:
+            print("- LLM configuration error. Check API keys, model names, and service accessibility.")
+        print("  Refer to `mycrews/qrew/llm_config.py` for LLM setup details.")
+        print("  Ensure `litellm` is installed (`pip install litellm`).")
+        return None # Indicate failure
+
+if __name__ == "__main__":
+    run_qrew()

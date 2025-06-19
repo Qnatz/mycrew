@@ -1,0 +1,25 @@
+tasks:
+  - description: >
+      Implement structured logging using {logging_library_name} (e.g., structlog, python-json-logger) for the {service_name} service.
+      Ensure logs are output in JSON format and include key context information like request ID and user ID.
+    expected_output: >
+      Logging configuration and code changes applied to {service_name}.
+      Sample log output demonstrating the structured JSON format.
+    agent: logger_agent
+
+  - description: >
+      Configure log shipping for the {application_name} application to send logs to {log_management_system} (e.g., ELK Stack, Splunk).
+      Set up log parsing and indexing in the log management system.
+    expected_output: >
+      Configuration files for log shipping agents (e.g., Filebeat, Fluentd).
+      Confirmation that logs are appearing and are searchable in {log_management_system}.
+    agent: logger_agent
+
+  - description: >
+      Define and implement application-level metrics to be exposed via a Prometheus endpoint for the {module_name} module.
+      Metrics should include {list_of_metrics} (e.g., request counts, error rates, processing latency).
+    expected_output: >
+      Code changes to expose a /metrics endpoint in {module_name}.
+      Documentation of the exposed metrics.
+      Sample Prometheus query results.
+    agent: logger_agent

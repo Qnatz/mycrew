@@ -1,0 +1,36 @@
+tasks:
+  - description: >
+      Review the {proposed_solution} (e.g., a technology stack, an architectural design, a specific tool)
+      against the detailed {project_constraints_document}.
+      Identify any violations or potential conflicts with budget, team skills, security policies,
+      licensing agreements, or existing infrastructure.
+    expected_output: >
+      A constraint compliance report. This report should:
+      - List each constraint and whether the proposed solution complies with it.
+      - Detail any identified violations or areas of concern.
+      - Provide recommendations for addressing non-compliance issues.
+      - Confirm overall compliance if no issues are found.
+    agent: constraint_checker_agent
+
+  - description: >
+      Assess the licensing implications of all components in the {proposed_tech_stack}.
+      Ensure compatibility with project goals and company policies.
+      Check for any open-source license conflicts or costly commercial licenses.
+      Input: {list_of_technologies_and_tools}.
+    expected_output: >
+      A license compliance report detailing:
+      - Licenses for each component in the stack.
+      - Any identified conflicts or restrictions (e.g., copyleft requirements, commercial fees).
+      - Confirmation of overall license compliance or a list of issues to be resolved.
+    agent: constraint_checker_agent
+
+  - description: >
+      Evaluate the security constraints and compliance requirements for the {project_name} project.
+      Check if the {proposed_architecture_or_stack} meets standards like {security_standard_1} (e.g., SOC2, HIPAA, GDPR)
+      and internal security policies.
+    expected_output: >
+      A security and compliance assessment report highlighting:
+      - How the proposal meets or fails to meet specified security standards.
+      - Any vulnerabilities or risks related to security constraints.
+      - Recommendations for enhancing security posture if needed.
+    agent: constraint_checker_agent

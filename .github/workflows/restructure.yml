@@ -1,0 +1,10 @@
+# (Optional: backup first if concerned about data)
+
+# Delete wrong qrew if it exists at top-level
+rm -rf ~/crewAI/qrew
+
+# Move correct qrew up one level
+mv ~/crewAI/crewAI/qrew ~/crewAI/qrew
+
+# (Optional) Remove now-empty crewAI/crewAI folder if not needed and it contains nothing else
+rm -rf ~/crewAI/crewAI

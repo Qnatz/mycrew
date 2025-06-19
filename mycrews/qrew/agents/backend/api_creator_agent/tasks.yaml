@@ -1,0 +1,24 @@
+tasks:
+  - description: >
+      Design and document a new API endpoint for {feature_description}.
+      This includes defining request/response formats, authentication requirements, and error handling.
+    expected_output: >
+      A detailed API design document or specification (e.g., OpenAPI/Swagger).
+      The specification should clearly outline all aspects of the new endpoint.
+    agent: api_creator_agent
+
+  - description: >
+      Implement the backend logic for the {endpoint_path} API endpoint.
+      This involves writing code to handle requests, interact with databases or other services, and generate appropriate responses.
+    expected_output: >
+      Functional backend code for the specified API endpoint.
+      Unit tests covering the core logic of the endpoint.
+    agent: api_creator_agent
+
+  - description: >
+      Refactor the existing {module_name} API to improve performance and maintainability.
+      Analyze current implementation, identify bottlenecks or areas for improvement, and apply necessary changes.
+    expected_output: >
+      Updated API code with improved performance and readability.
+      Documentation of changes made and performance benchmarks if applicable.
+    agent: api_creator_agent

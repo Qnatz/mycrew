@@ -1,0 +1,24 @@
+tasks:
+  - description: >
+      Set up a message queue (e.g., RabbitMQ, Kafka, SQS) for handling asynchronous {task_type} tasks.
+      Configure producers, consumers, and dead-letter queues.
+    expected_output: >
+      A fully functional message queue system ready for use.
+      Documentation on how to publish and consume messages for {task_type}.
+    agent: queue_agent
+
+  - description: >
+      Implement a worker service to process messages from the {queue_name} queue.
+      The worker should handle message deserialization, task execution, and error handling.
+    expected_output: >
+      A robust worker service capable of processing messages from {queue_name}.
+      Logging and monitoring for message processing status.
+    agent: queue_agent
+
+  - description: >
+      Monitor and optimize the performance of the {queue_system_name} message queue system.
+      Track queue depth, message throughput, and consumer processing times.
+    expected_output: >
+      A performance report with key metrics and optimization recommendations.
+      Adjusted configurations or scaling strategies if necessary.
+    agent: queue_agent

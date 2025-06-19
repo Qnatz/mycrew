@@ -1,0 +1,36 @@
+tasks:
+  - description: >
+      Analyze the high-level {user_idea} and any accompanying {stakeholder_feedback} or {market_research_data}.
+      To ensure consistency and leverage existing knowledge, consult the Knowledge Base for any relevant past projects, architectural decisions, or definitions related to the core concepts in the {user_idea}.
+      Elicit further details if necessary and transform this information into a structured set of technical requirements.
+      Focus on clarity, testability, and completeness.
+    expected_output: >
+      Return a JSON object with the following keys:
+      "summary": "A comprehensive technical requirements specification. This summary should detail user stories with acceptance criteria, functional requirements (what the system should do), non-functional requirements (e.g., performance, security, usability), data requirements (input/output data, data formats), a glossary of terms if new concepts are introduced, and any identified ambiguities or areas needing further clarification.",
+      "action_items": ["List key actions or next steps, e.g., 'Clarify ambiguity X with stakeholder Y', 'Proceed to architectural design for module Z'."],
+      "confidence": "A float between 0.0 and 1.0 indicating your confidence in the completeness and clarity of the elicited requirements."
+    agent: idea_interpreter_agent
+    output_pydantic: mycrews.qrew.models.common_outputs.TaskOutput
+
+  - description: >
+      Create a detailed feature breakdown for the requested '{feature_name}' based on the initial {feature_concept}.
+      Identify individual components, user interactions, and potential dependencies.
+    expected_output: >
+      Return a JSON object with the following keys:
+      "summary": "A feature specification document for '{feature_name}'. This summary should include a list of sub-features or user stories, mockups or wireframes for UI elements (if applicable, or a description of UI needs), integration points with other system features, and success metrics for the feature.",
+      "action_items": ["List key actions, e.g., 'Develop sub-feature A', 'Design UI for interaction B', 'Define API for integration point C'."],
+      "confidence": "A float between 0.0 and 1.0 indicating your confidence in the feature breakdown."
+    agent: idea_interpreter_agent
+    output_pydantic: mycrews.qrew.models.common_outputs.TaskOutput
+
+  - description: >
+      Review the provided {technical_documentation} for clarity, consistency, and completeness from a user/stakeholder perspective.
+      Identify jargon or technical details that may be confusing to a non-technical audience and suggest improvements.
+      Ensure the documentation accurately reflects the project's goals and user needs.
+    expected_output: >
+      Return a JSON object with the following keys:
+      "summary": "A review report on the {technical_documentation}. This summary should include a list of identified issues (e.g., unclear language, missing information, inconsistencies) and specific suggestions for improvement to enhance readability and understanding for non-technical stakeholders.",
+      "action_items": ["List key actions, e.g., 'Rewrite section X for clarity', 'Add glossary for term Y', 'Verify accuracy of section Z with technical team'."],
+      "confidence": "A float between 0.0 and 1.0 indicating your confidence in the review and suggestions."
+    agent: idea_interpreter_agent
+    output_pydantic: mycrews.qrew.models.common_outputs.TaskOutput

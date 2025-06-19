@@ -1,0 +1,29 @@
+tasks:
+  - description: >
+      Write unit tests for the {class_or_function_name} in {file_path} using the {testing_framework_name} framework (e.g., pytest, unittest).
+      Aim for at least {coverage_percentage}% test coverage.
+    expected_output: >
+      A set of unit test files.
+      A test execution report showing all tests passing.
+      A coverage report indicating the achieved coverage.
+    agent: tester_agent
+
+  - description: >
+      Develop integration tests for the interaction between {service_A_name} and {service_B_name}.
+      The tests should cover {specific_scenarios_to_test}.
+      Use {testing_tool_name} (e.g., Postman, RestAssured) if applicable.
+    expected_output: >
+      Integration test suite.
+      A report showing successful execution of integration tests.
+      Documentation on how to run the integration tests.
+    agent: tester_agent
+
+  - description: >
+      Perform end-to-end testing for the {user_flow_description} user flow.
+      This involves simulating user interactions from the UI to the backend.
+      Use a UI automation tool like {ui_automation_tool_name} (e.g., Selenium, Cypress).
+    expected_output: >
+      End-to-end test scripts.
+      A test report indicating the success or failure of the user flow.
+      Screenshots or videos of the test execution if applicable.
+    agent: tester_agent

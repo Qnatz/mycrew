@@ -1,0 +1,24 @@
+tasks:
+  - description: >
+      Provision and configure a {database_type} database (e.g., PostgreSQL, MongoDB) for the {application_name} application.
+      Set up users, permissions, and backup strategies.
+    expected_output: >
+      A fully provisioned and configured {database_type} database instance.
+      Connection details and access credentials securely stored.
+    agent: storage_agent
+
+  - description: >
+      Implement data archiving and deletion policies for the {data_category} data.
+      Ensure compliance with data retention regulations (e.g., GDPR).
+    expected_output: >
+      Automated scripts or processes for archiving and deleting data.
+      Documentation of the implemented policies and procedures.
+    agent: storage_agent
+
+  - description: >
+      Set up and manage a distributed file storage solution (e.g., AWS S3, MinIO) for storing user-uploaded content like {file_types}.
+      Configure access controls, versioning, and lifecycle policies.
+    expected_output: >
+      A secure and scalable distributed file storage system.
+      API endpoints or SDKs for uploading and retrieving files.
+    agent: storage_agent

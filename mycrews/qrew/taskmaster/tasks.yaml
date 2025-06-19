@@ -1,0 +1,46 @@
+tasks:
+  - description: >
+      Analyze the incoming {user_request} or {project_goal_statement} using available tools, including the Knowledge Base Query Tool, for relevant context or existing project information.
+      Clarify ambiguities and define the primary objectives, scope, and desired outcomes.
+      Consult with the IdeaInterpreterAgent if the request is vague or needs significant refinement even after knowledge base consultation.
+      Input: {user_request}, {project_goal_statement}, {priority_level}.
+    expected_output: >
+      A JSON object adhering to the following schema:
+      {
+        "project_name": "string (unique and descriptive, or existing project name if identified)",
+        "refined_brief": "string (a concise summary of the project's purpose and key objectives)",
+        "is_new_project": "boolean (true if the request is for a new project, false otherwise)",
+        "recommended_next_stage": "string (e.g., 'architecture', 'execution', 'clarification')",
+        "project_scope": "string (e.g., 'web-only', 'mobile-only', 'full-stack', 'unknown')",
+        "key_deliverables": ["string (list of key deliverables)"],
+        "success_criteria": ["string (list of success criteria)"],
+        "initial_complexity_assessment": "string (e.g., 'low', 'medium', 'high')",
+        "potential_challenges": ["string (list of potential challenges, can be empty)"]
+      }
+      Ensure all string values within the JSON are properly escaped.
+      The output MUST be only the JSON object itself, without any surrounding text or markdown code fences.
+    agent: taskmaster_agent
+
+  - description: > # This task remains unchanged
+      Based on the clarified project brief for {project_name}, determine the overall execution strategy.
+      This involves deciding whether to first engage the ProjectArchitectAgent for design,
+      the TechVettingCouncilAgent for technology choices, or directly the ExecutionManagerAgent for well-defined projects.
+      Delegate the initial phase to the chosen orchestrator or lead agent.
+      Input: {project_brief_document_url}, {organizational_priorities}.
+    expected_output: >
+      A high-level project initiation plan, specifying:
+      - The first orchestrator or Lead Agent to be engaged.
+      - The initial set of inputs and objectives for this first engagement.
+      - A record of the delegation.
+    agent: taskmaster_agent
+
+  - description: > # This task remains unchanged
+      Track the handoff of the {project_name} to the designated orchestrator or Lead Agent.
+      Ensure they have acknowledged receipt and have all necessary information to proceed.
+      Log the initial delegation and set up a mechanism for receiving high-level status updates or completion notifications.
+      Input: {project_name}, {delegated_agent_or_crew_name}, {handoff_confirmation_process}.
+    expected_output: >
+      Confirmation of successful handoff of {project_name}.
+      Initial project state logged in a tracking system (conceptual).
+      High-level monitoring plan established.
+    agent: taskmaster_agent

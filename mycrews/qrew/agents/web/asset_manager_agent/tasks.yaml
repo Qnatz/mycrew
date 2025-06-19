@@ -1,0 +1,25 @@
+tasks:
+  - description: >
+      Optimize all images in the '{project_asset_path}/images' directory for web use.
+      This includes compression, resizing for different viewports, and converting to modern formats like WebP.
+    expected_output: >
+      Optimized image files in the output directory.
+      A report summarizing the file size reductions and format changes.
+    agent: asset_manager_agent
+
+  - description: >
+      Minify and bundle CSS and JavaScript files for the {website_name} website.
+      Set up source maps for easier debugging in production.
+    expected_output: >
+      Minified and bundled CSS and JavaScript files.
+      Source map files.
+      Updated HTML files to reference the bundled assets.
+    agent: asset_manager_agent
+
+  - description: >
+      Implement a Content Delivery Network (CDN) setup (e.g., Cloudflare, AWS CloudFront) for serving static assets of the {application_url} application.
+      Configure cache policies and update asset URLs.
+    expected_output: >
+      CDN configured and serving static assets.
+      Verification that assets are being delivered via the CDN with appropriate cache headers.
+    agent: asset_manager_agent

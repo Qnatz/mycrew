@@ -1,0 +1,32 @@
+tasks:
+  - description: >
+      Oversee the setup and maintenance of CI/CD pipelines for {project_name} by the DevOpsCrew.
+      Ensure pipelines are efficient, reliable, and cover all necessary stages (build, test, deploy).
+      Define standards for pipeline configurations and artifact management.
+      Input: {project_name}, {list_of_services_to_integrate_in_ci}.
+    expected_output: >
+      Robust CI/CD pipelines established for all services in {project_name}.
+      Documentation on pipeline usage and maintenance.
+      Regular reports on pipeline performance and health.
+    agent: devops_and_integration_coordinator_agent
+
+  - description: >
+      Coordinate infrastructure management tasks with the DevOpsCrew for {project_name}.
+      This includes provisioning, scaling, monitoring, and ensuring cost-optimization of cloud resources on {cloud_provider}.
+      Input: {project_name}, {infrastructure_requirements}, {budget_for_infra}.
+    expected_output: >
+      Efficiently managed and cost-optimized infrastructure for {project_name}.
+      Clear documentation of infrastructure setup and configurations.
+      Monitoring dashboards and alerting for infrastructure health.
+    agent: devops_and_integration_coordinator_agent
+
+  - description: >
+      Plan and manage the integration of various services and components for the '{feature_or_release_name}'.
+      Define integration points, API contracts, and data flows.
+      Coordinate with relevant development CCoordinators (Backend, Frontend, Mobile) to ensure smooth integration.
+      Input: {feature_or_release_name}, {list_of_services_to_integrate}, {api_documentation_for_services}.
+    expected_output: >
+      A detailed integration plan for '{feature_or_release_name}'.
+      Successful integration of all specified services and components.
+      Integration test reports confirming correct interaction between services.
+    agent: devops_and_integration_coordinator_agent

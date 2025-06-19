@@ -1,0 +1,27 @@
+tasks:
+  - description: >
+      Write Python code for a function that implements {algorithm_description}.
+      The function should take {input_parameters} as input and return {output_description}.
+      Ensure the code is well-commented and includes error handling.
+    expected_output: >
+      A Python file containing the implemented function.
+      Docstrings explaining the function's purpose, arguments, and return value.
+      Basic unit tests for the function.
+    agent: code_writer_agent
+
+  - description: >
+      Develop a REST API endpoint in {framework_name} (e.g., Flask, FastAPI) for {resource_name}.
+      The endpoint should support {http_methods} (e.g., GET, POST, PUT, DELETE) and interact with the {database_name} database.
+    expected_output: >
+      Source code for the API endpoint.
+      Integration tests to verify endpoint functionality.
+      API documentation for the new endpoint.
+    agent: code_writer_agent
+
+  - description: >
+      Refactor the existing {class_name} class in the {module_path} module to improve its readability and apply the {design_pattern_name} design pattern.
+    expected_output: >
+      The refactored {class_name} class code.
+      A brief explanation of the changes made and how the design pattern was applied.
+      Confirmation that existing tests still pass.
+    agent: code_writer_agent

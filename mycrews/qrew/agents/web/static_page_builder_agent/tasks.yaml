@@ -1,0 +1,27 @@
+tasks:
+  - description: >
+      Create a static 'About Us' page for the website {website_domain} using HTML, CSS, and minimal JavaScript.
+      The content should be based on the provided {content_document_url} and design {design_mockup_url}.
+    expected_output: >
+      An HTML file for the 'About Us' page.
+      Associated CSS files for styling.
+      Any necessary JavaScript files for basic interactivity.
+      The page should be responsive and match the design.
+    agent: static_page_builder_agent
+
+  - description: >
+      Develop a landing page for the new product '{product_name}' using a static site generator like {static_site_generator_name} (e.g., Hugo, Jekyll, Next.js static export).
+      The page should include {sections_list} (e.g., hero, features, pricing, contact form).
+    expected_output: >
+      Source files for the static site generator.
+      The generated static HTML, CSS, and JavaScript files for the landing page.
+      The landing page should be deployable to any static hosting service.
+    agent: static_page_builder_agent
+
+  - description: >
+      Convert the existing {dynamic_website_section_url} section of the website, which rarely changes, into static HTML pages to improve performance and reduce server load.
+      Identify dynamic parts that can be pre-rendered.
+    expected_output: >
+      A set of static HTML, CSS, and JavaScript files replacing the dynamic section.
+      A report on performance improvements (e.g., load time reduction).
+    agent: static_page_builder_agent

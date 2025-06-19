@@ -1,0 +1,31 @@
+{
+  "project_name": "ModernPortfolioWebsite",
+  "created_at": "2025-06-14T12:40:49.501844",
+  "current_stage": "architecture",
+  "completed_stages": [
+    "taskmaster"
+  ],
+  "artifacts": {
+    "taskmaster": {
+      "project_name": "ModernPortfolioWebsite",
+      "refined_brief": "Develop a single-page, responsive, modern personal portfolio website.  The website should include a navigation bar, hero section with name and title, 'About Me' section, 'Projects' section (with placeholders for 2-3 projects, each including title, short description, and image), and a footer with copyright information.  The design should be clean and professional.",
+      "is_new_project": true
+    }
+  },
+  "error_summary": [
+    {
+      "stage": "taskmaster",
+      "success": true,
+      "message": "Completed successfully",
+      "timestamp": "2025-06-14T12:40:49.504952"
+    },
+    {
+      "stage": "architecture",
+      "success": false,
+      "message": "Stage architecture failed: litellm.InternalServerError: litellm.InternalServerError: VertexAIException - {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"The model is overloaded. Please try again later...",
+      "timestamp": "2025-06-14T12:41:19.199038"
+    }
+  ],
+  "status": "failed",
+  "updated_at": "2025-06-14T12:41:19.199091"
+}

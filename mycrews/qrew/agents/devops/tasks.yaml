@@ -1,0 +1,35 @@
+tasks:
+  - description: >
+      Set up a CI/CD pipeline for the {application_name} application using {ci_cd_tool_name} (e.g., Jenkins, GitLab CI, GitHub Actions).
+      The pipeline should include build, test, and deployment stages.
+    expected_output: >
+      A functional CI/CD pipeline configuration file.
+      Successful execution of the pipeline for a sample commit.
+      Documentation on the pipeline stages and triggers.
+    agent: devops_agent
+
+  - description: >
+      Provision and configure infrastructure on {cloud_provider_name} (e.g., AWS, Azure, GCP) using {iac_tool_name} (e.g., Terraform, CloudFormation).
+      The infrastructure should include {list_of_resources} (e.g., VMs, databases, load balancers).
+    expected_output: >
+      Infrastructure as Code (IaC) scripts.
+      Successfully provisioned infrastructure on {cloud_provider_name}.
+      Documentation of the infrastructure setup.
+    agent: devops_agent
+
+  - description: >
+      Implement monitoring and alerting for the {application_name} application using {monitoring_tool_name} (e.g., Prometheus, Grafana, Datadog).
+      Set up dashboards to visualize key metrics and alerts for critical issues.
+    expected_output: >
+      Monitoring dashboards displaying key application metrics.
+      Alerting rules configured for critical thresholds.
+      Documentation on how to access dashboards and interpret alerts.
+    agent: devops_agent
+
+  - description: >
+      Automate the deployment process for the {service_name} service to the {environment_name} environment using {deployment_strategy_name} (e.g., blue/green, canary).
+    expected_output: >
+      Automated deployment scripts or pipeline configurations.
+      Successful deployment of {service_name} to {environment_name} with minimal downtime.
+      Rollback procedures defined in case of deployment failure.
+    agent: devops_agent

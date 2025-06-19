@@ -1,0 +1,33 @@
+tasks:
+  - description: >
+      Analyze the provided {project_requirements}, {constraints}, and {technical_vision}
+      to develop a comprehensive software architecture plan.
+      Consider scalability, maintainability, security, and performance.
+    expected_output: >
+      A detailed software architecture document. This document should include:
+      - High-level system diagrams (e.g., component diagrams, deployment diagrams).
+      - Technology stack recommendations for each component.
+      - Data model design overview.
+      - API design guidelines and key endpoint definitions.
+      - Integration points with external services.
+      - Non-functional requirements considerations (e.g., security plan, scalability strategy).
+    agent: project_architect_agent
+
+  - description: >
+      Review and refine the existing architecture for the {project_module_name} module.
+      Identify areas for improvement based on new {change_requests} or {performance_feedback}.
+      Ensure alignment with the overall {project_name} architecture.
+    expected_output: >
+      An updated architecture specification for the {project_module_name} module.
+      A summary of changes made and their rationale.
+      Recommendations for implementation of architectural changes.
+    agent: project_architect_agent
+
+  - description: >
+      Create a technical roadmap for the evolution of the {system_name} architecture over the next {time_horizon} (e.g., 1-2 years).
+      Consider upcoming technology trends, business goals, and potential refactoring needs.
+    expected_output: >
+      A technical roadmap document outlining planned architectural enhancements,
+      technology upgrades, and refactoring initiatives for {system_name}.
+      The roadmap should include timelines and dependencies.
+    agent: project_architect_agent

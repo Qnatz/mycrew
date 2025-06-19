@@ -1,0 +1,30 @@
+tasks:
+  - description: >
+      Document the approved {technology_name_or_decision} including the {decision_rationale},
+      key benefits, potential drawbacks, and alternative options considered.
+      Follow the provided {style_guide} and {documentation_template}.
+    expected_output: >
+      A well-structured document detailing the {technology_name_or_decision}.
+      The document should be clear, concise, and suitable for both technical and non-technical audiences.
+      It should be saved as '{output_file_name}.md' or in the specified format.
+    agent: documentation_writer_agent # This refers to the tech_stack_committee's documentation_writer_agent
+
+  - description: >
+      Create a comprehensive guide on the approved '{tech_stack_component_name}' (e.g., a specific framework, database, or tool).
+      The guide should cover its setup, best practices for usage within the project {project_name},
+      common troubleshooting tips, and links to official documentation.
+      Input: {component_details}, {usage_context}.
+    expected_output: >
+      A detailed usage guide for '{tech_stack_component_name}'.
+      The guide should be practical and help developers effectively use the component.
+    agent: documentation_writer_agent
+
+  - description: >
+      Maintain and update the central repository of tech stack decisions and architectural guidelines.
+      Incorporate the latest {new_decision_document} or {updated_guideline_text}.
+      Ensure version control and clear changelogs for all documentation updates.
+      Input: {repository_path}, {content_to_update_or_add}.
+    expected_output: >
+      The central documentation repository updated with the new information.
+      A confirmation of the update and versioning details.
+    agent: documentation_writer_agent

@@ -1,0 +1,26 @@
+tasks:
+  - description: >
+      Design the database schema for the new {feature_name} feature.
+      This includes defining tables, columns, relationships, and constraints.
+      Consider data types, indexing, and normalization.
+    expected_output: >
+      A detailed database schema diagram and SQL DDL scripts.
+      Documentation explaining the schema design and choices made.
+    agent: data_model_agent
+
+  - description: >
+      Generate database migration scripts to update the schema from version {current_version} to {new_version}.
+      Ensure data integrity is maintained during the migration process.
+    expected_output: >
+      Versioned migration scripts (e.g., using Flyway or Liquibase).
+      A rollback plan in case of migration failure.
+    agent: data_model_agent
+
+  - description: >
+      Optimize database queries for the {module_name} module to improve performance.
+      Analyze slow queries, suggest index improvements, and refactor queries if necessary.
+    expected_output: >
+      A report with identified slow queries and optimization suggestions.
+      Optimized query implementations or index creation scripts.
+      Performance improvement metrics.
+    agent: data_model_agent

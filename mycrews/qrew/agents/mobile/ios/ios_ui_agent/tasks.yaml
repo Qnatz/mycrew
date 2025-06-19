@@ -1,0 +1,26 @@
+tasks:
+  - description: >
+      Develop the UI for the {screen_name} screen in the iOS app using SwiftUI or UIKit (Storyboards/XIBs).
+      The screen should display {information_to_display} and allow users to perform {user_actions}.
+    expected_output: >
+      UI code (SwiftUI views or UIKit components) for the {screen_name} screen.
+      The UI should match the provided design mockups (if any).
+      Basic UI tests (e.g., XCTest UI tests).
+    agent: ios_ui_agent
+
+  - description: >
+      Implement navigation between {screen_A_name} and {screen_B_name} using NavigationLink (SwiftUI) or segues/navigation controllers (UIKit).
+      Pass {data_to_pass} between the screens.
+    expected_output: >
+      Navigation logic implemented.
+      Code to trigger navigation and handle data passing.
+    agent: ios_ui_agent
+
+  - description: >
+      Create a custom UIView or SwiftUI View for {custom_component_description} (e.g., a custom chart or an interactive map annotation).
+      The component should be reusable and customizable.
+    expected_output: >
+      Source code for the custom View.
+      Documentation on how to use and customize the component.
+      Examples of the component in use.
+    agent: ios_ui_agent

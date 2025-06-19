@@ -1,0 +1,24 @@
+tasks:
+  - description: >
+      Receive an OTP and user identifier for verification.
+      Validate the OTP against the generated or stored OTP for the user.
+    expected_output: >
+      A boolean result indicating whether the OTP is valid or invalid.
+      If valid, the OTP should be marked as used to prevent replay attacks.
+    agent: otp_verifier_agent # Assuming the agent is defined in an agents.yaml or directly in code
+
+  - description: >
+      Handle OTP generation requests for users.
+      Generate a secure, time-sensitive OTP and deliver it to the user via a configured channel (e.g., SMS, email, authenticator app).
+    expected_output: >
+      A new OTP generated and successfully delivered to the user.
+      The generated OTP is stored securely for later verification.
+    agent: otp_verifier_agent
+
+  - description: >
+      Manage OTP lifecycle, including expiration and retry limits.
+      Ensure OTPs expire after a defined period and limit the number of verification attempts.
+    expected_output: >
+      OTPs are correctly invalidated after expiration or excessive failed attempts.
+      Relevant security logs are generated for suspicious activities.
+    agent: otp_verifier_agent

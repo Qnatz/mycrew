@@ -1,0 +1,26 @@
+tasks:
+  - description: >
+      Implement JWT-based authentication for the {service_name} backend service.
+      This includes token generation, validation, and secure storage of secrets.
+    expected_output: >
+      Functional JWT authentication implemented for {service_name}.
+      Secure token handling mechanisms in place.
+      Documentation on how to integrate with the authentication system.
+    agent: auth_agent
+
+  - description: >
+      Integrate OAuth 2.0 provider {provider_name} for user authentication.
+      Configure the backend to handle OAuth flows, token exchange, and user profile retrieval.
+    expected_output: >
+      Successful integration with {provider_name} for OAuth 2.0 authentication.
+      Users can authenticate using their {provider_name} credentials.
+    agent: auth_agent
+
+  - description: >
+      Implement role-based access control (RBAC) for the {api_resource} API.
+      Define roles and permissions, and enforce them at the API gateway or service level.
+    expected_output: >
+      RBAC system implemented for {api_resource}.
+      Access to resources is restricted based on user roles.
+      Clear documentation of roles and their associated permissions.
+    agent: auth_agent

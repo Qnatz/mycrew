@@ -1,0 +1,35 @@
+tasks:
+  - description: >
+      Initiate and manage the vetting process for a {proposal_type} (e.g., new technology adoption, architectural change, technical standard).
+      Delegate tasks to the TechStackCommitteeCrew:
+      - StackAdvisorAgent to evaluate the proposal's technical merits and alternatives.
+      - ConstraintCheckerAgent to verify compliance with all project and organizational constraints.
+      Compile findings and prepare a summary for council review.
+      Input: {proposal_document_url}, {project_id}, {key_questions_for_council}.
+    expected_output: >
+      A comprehensive vetting package including:
+      - Stack Advisor's evaluation report.
+      - Constraint Checker's compliance report.
+      - A summary of findings and key discussion points for the council.
+    agent: tech_vetting_council_agent # This agent coordinates the crew
+
+  - description: >
+      Facilitate a Tech Vetting Council meeting to discuss the {proposal_under_review}.
+      Present the compiled findings, guide the discussion among council members, and ensure all perspectives are heard.
+      Drive the council towards a clear decision (approve, reject, approve with conditions).
+      Input: {vetting_package_url}, {meeting_agenda}.
+    expected_output: >
+      A documented decision from the Tech Vetting Council regarding the {proposal_under_review}.
+      This includes the final decision, rationale, any conditions for approval, and action items.
+      Meeting minutes summarizing the discussion.
+    agent: tech_vetting_council_agent
+
+  - description: >
+      Communicate the Tech Vetting Council's decision on {proposal_topic} to the relevant stakeholders.
+      Ensure the decision and its rationale are clearly understood.
+      Oversee the documentation of the final decision by the DocumentationWriterAgent of the TechStackCommitteeCrew.
+      Input: {council_decision_document_url}, {stakeholder_list_to_notify}.
+    expected_output: >
+      Confirmation that the council's decision has been communicated to all relevant stakeholders.
+      The final, approved decision documented and stored in the knowledge base by the TechStackCommittee's DocumentationWriterAgent.
+    agent: tech_vetting_council_agent

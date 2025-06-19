@@ -1,0 +1,33 @@
+tasks:
+  - description: >
+      Plan the mobile development sprint for the {milestone_name}, considering both {android_specific_tasks} and {ios_specific_tasks}.
+      Break down features based on {feature_list} into actionable tasks for the MobileDevelopmentCrew.
+      Coordinate dependencies between platforms if any.
+    expected_output: >
+      A comprehensive mobile sprint plan for {milestone_name}, detailing:
+      - Tasks for Android and iOS teams/agents.
+      - Estimated timelines and dependencies.
+      - Resource allocation for each platform.
+      - Deliverables and success criteria for each task.
+    agent: mobile_project_coordinator_agent
+
+  - description: >
+      Track the progress of mobile app development for {app_name} across Android and iOS.
+      Facilitate communication between platform developers, address platform-specific issues, and ensure consistency where required.
+      Provide consolidated status updates for {reporting_stakeholder}.
+      Input: {app_name}, {current_features_in_development}.
+    expected_output: >
+      Regular consolidated status reports on mobile app development, including:
+      - Progress for Android and iOS versions.
+      - Any platform-specific challenges and their resolutions.
+      - Adherence to timeline and quality standards.
+    agent: mobile_project_coordinator_agent
+
+  - description: >
+      Oversee the testing and release process for the {app_version} version of the {app_name} mobile application.
+      Coordinate QA efforts for both platforms, manage beta testing programs, and prepare app store submission materials.
+      Input: {app_version}, {app_name}, {qa_results_android}, {qa_results_ios}, {release_notes_draft}.
+    expected_output: >
+      Successful submission of {app_name} v{app_version} to Google Play Store and Apple App Store.
+      Finalized release notes and a summary of the release process.
+    agent: mobile_project_coordinator_agent

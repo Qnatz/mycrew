@@ -1,0 +1,24 @@
+tasks:
+  - description: >
+      Develop a data synchronization mechanism between the primary {source_database} and the replica {target_database}.
+      Ensure data consistency and handle potential conflicts.
+    expected_output: >
+      A reliable data synchronization process.
+      Monitoring tools to track sync status and data discrepancies.
+    agent: sync_agent
+
+  - description: >
+      Implement a change data capture (CDC) system for the {database_name} database.
+      Stream data changes to other services or data warehouses in real-time.
+    expected_output: >
+      A CDC pipeline capturing and propagating data changes.
+      Consumers are ableto subscribe to data change events.
+    agent: sync_agent
+
+  - description: >
+      Resolve data synchronization conflicts that have occurred between {system_A} and {system_B}.
+      Analyze the cause of conflicts and apply corrective measures.
+    expected_output: >
+      Data conflicts resolved and consistency restored.
+      A report detailing the conflict resolution process and preventative measures.
+    agent: sync_agent

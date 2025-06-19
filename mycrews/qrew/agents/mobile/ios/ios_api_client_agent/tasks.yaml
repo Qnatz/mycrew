@@ -1,0 +1,27 @@
+tasks:
+  - description: >
+      Implement API client logic in Swift for the iOS app to consume the '{endpoint_url}' endpoint.
+      Handle request creation, response parsing (JSON/XML), and error management.
+      Use {network_library_name} (e.g., Alamofire, URLSession).
+    expected_output: >
+      iOS client code for the specified API endpoint.
+      Unit tests for the API client logic.
+      Documentation on how to use the client.
+    agent: ios_api_client_agent
+
+  - description: >
+      Integrate the {sdk_name} SDK into the iOS application for {feature_description}.
+      Follow the SDK documentation for setup and API calls using CocoaPods or Swift Package Manager.
+    expected_output: >
+      Successful integration of the {sdk_name} SDK.
+      {feature_description} functionality working as expected in the app.
+    agent: ios_api_client_agent
+
+  - description: >
+      Implement offline caching for API responses from {api_endpoint_group} to improve performance and provide offline access on iOS.
+      Use a caching strategy like {cache_strategy_name} (e.g., cache-first, network-first) with URLCache or a custom solution.
+    expected_output: >
+      API responses are cached locally on the iOS device.
+      App can display cached data when offline.
+      Cache invalidation mechanism is in place.
+    agent: ios_api_client_agent

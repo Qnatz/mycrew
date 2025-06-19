@@ -1,0 +1,34 @@
+tasks:
+  - description: >
+      Plan the development sprint for the upcoming {web_project_milestone} based on {feature_priorities} and {available_resources}.
+      Break down features into specific tasks for the WebDevelopmentCrew (static page creation, dynamic feature development, asset optimization).
+      Estimate effort and define task dependencies.
+    expected_output: >
+      A detailed sprint plan for {web_project_milestone}, including:
+      - List of tasks assigned to the WebDevelopmentCrew.
+      - Estimated timelines for each task.
+      - Clearly defined deliverables and success criteria for each task.
+      - Resource allocation plan.
+    agent: web_project_coordinator_agent
+
+  - description: >
+      Monitor the progress of the WebDevelopmentCrew on the '{current_sprint_goal}'.
+      Identify any roadblocks or delays, and facilitate their resolution.
+      Provide regular status updates to {relevant_stakeholders}.
+      Input: {current_sprint_goal}, {reporting_frequency}.
+    expected_output: >
+      Regular status reports on sprint progress, including:
+      - Percentage of tasks completed.
+      - Any identified risks or issues and their mitigation plans.
+      - Updated timelines if necessary.
+    agent: web_project_coordinator_agent
+
+  - description: >
+      Coordinate the release of the new {web_feature_set} developed by the WebDevelopmentCrew.
+      Ensure all quality assurance checks are completed, documentation is updated, and deployment is smooth.
+      Liaise with DevOps and QA teams as needed.
+      Input: {web_feature_set}, {qa_reports}, {deployment_plan}.
+    expected_output: >
+      Successful release of {web_feature_set}.
+      A post-release report summarizing the release process and any lessons learned.
+    agent: web_project_coordinator_agent

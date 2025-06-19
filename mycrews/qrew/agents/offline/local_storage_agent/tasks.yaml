@@ -1,0 +1,23 @@
+tasks:
+  - description: >
+      Set up a local database using {database_technology} (e.g., SQLite, PouchDB, WatermelonDB) for storing {data_type} data to enable offline access for the {application_type} application.
+    expected_output: >
+      A functional local database schema and setup.
+      Helper functions or an ORM layer for easy data access (CRUD operations).
+    agent: local_storage_agent
+
+  - description: >
+      Implement data encryption for sensitive {data_category} stored in the local offline database.
+      Use {encryption_algorithm_or_library} to ensure data at rest is protected.
+    expected_output: >
+      Encryption and decryption mechanisms implemented for local storage.
+      Sensitive data is stored in an encrypted format.
+    agent: local_storage_agent
+
+  - description: >
+      Manage local cache for frequently accessed {resource_type} (e.g., images, configuration files) to improve performance and reduce network requests.
+      Implement a cache eviction policy like {eviction_policy_name} (e.g., LRU, FIFO).
+    expected_output: >
+      Local caching mechanism for {resource_type}.
+      Resources are served from cache when available and fresh.
+    agent: local_storage_agent

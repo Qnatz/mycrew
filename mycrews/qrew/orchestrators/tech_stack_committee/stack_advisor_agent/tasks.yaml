@@ -1,0 +1,37 @@
+tasks:
+  - description: >
+      Analyze the provided {project_requirements}, {existing_architecture_details} (if any),
+      {team_skills}, and {budget_constraints} to propose an optimal technology stack.
+      Research and compare suitable frameworks, languages, databases, and tools.
+      The recommendation should cover frontend, backend, database, and deployment considerations.
+    expected_output: >
+      A detailed technology stack proposal document. This document should include:
+      - Recommended technologies for each layer (e.g., frontend, backend, data storage).
+      - Justification for each recommendation, including pros and cons.
+      - Comparison with alternative technologies.
+      - Potential risks and mitigation strategies associated with the proposed stack.
+      - How the stack aligns with team skills and project constraints.
+    agent: stack_advisor_agent
+
+  - description: >
+      Evaluate the suitability of '{specific_technology_name}' for the '{project_context}' project.
+      Consider its maturity, community support, scalability, security implications, and integration capabilities
+      with the existing or planned {existing_stack_components}.
+    expected_output: >
+      An evaluation report for '{specific_technology_name}' in the context of '{project_context}'.
+      The report should include:
+      - A clear recommendation (adopt, consider alternatives, reject).
+      - Detailed reasoning based on evaluation criteria.
+      - Potential benefits and drawbacks of adopting the technology.
+    agent: stack_advisor_agent
+
+  - description: >
+      Prepare a presentation summarizing the recommended technology stack for the upcoming '{project_name}' project.
+      The presentation should be targeted at both technical and non-technical stakeholders,
+      clearly explaining the choices and their benefits.
+      Input: {tech_stack_proposal_document}.
+    expected_output: >
+      A presentation file (e.g., PowerPoint, Google Slides, or Markdown slides).
+      The presentation should be well-structured, visually appealing, and effectively communicate
+      the key aspects of the technology stack recommendation.
+    agent: stack_advisor_agent

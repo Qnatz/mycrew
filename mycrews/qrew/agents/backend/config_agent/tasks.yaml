@@ -1,0 +1,24 @@
+tasks:
+  - description: >
+      Set up and manage environment-specific configurations (dev, staging, prod) for the {application_name} backend.
+      Use a configuration management tool like Vault, Consul, or Spring Cloud Config.
+    expected_output: >
+      Secure and version-controlled configurations for all environments.
+      Application can dynamically load configurations based on the environment.
+    agent: config_agent
+
+  - description: >
+      Implement dynamic configuration reloading for the {service_name} service.
+      Allow configuration changes to be applied without requiring a service restart.
+    expected_output: >
+      {service_name} can reload its configuration at runtime.
+      Changes to configuration are reflected in the service behavior without downtime.
+    agent: config_agent
+
+  - description: >
+      Audit and update security configurations for all backend services.
+      Ensure all services comply with the latest security best practices for data protection, network access, and secret management.
+    expected_output: >
+      A report detailing the audit findings and changes made.
+      Updated security configurations applied to all backend services.
+    agent: config_agent

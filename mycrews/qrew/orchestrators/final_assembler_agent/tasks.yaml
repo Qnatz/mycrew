@@ -1,0 +1,28 @@
+tasks:
+  - description: >
+      Collect all specified {component_artifacts} (e.g., compiled code, built libraries),
+      {documentation_files}, and {configuration_settings}.
+      Verify that all expected items are present and match the required versions or specifications.
+    expected_output: >
+      A checklist confirming receipt and verification of all input artifacts.
+      A report detailing any missing items or discrepancies found.
+      All collected items organized into a temporary staging area.
+    agent: final_assembler_agent
+
+  - description: >
+      Assemble the collected components into a final project package according to the {packaging_requirements}.
+      This may involve creating archives (e.g., ZIP, TAR), installer packages, or container images.
+      Ensure the package structure is correct and includes all necessary files.
+    expected_output: >
+      A final, assembled project package (e.g., a ZIP file, a Docker image ID, or a path to an installer).
+      A manifest file listing the contents of the package.
+    agent: final_assembler_agent
+
+  - description: >
+      Prepare a deployment manifest or bill of materials for the {project_name} v{version_number}.
+      This document should list all components included in the final package, their versions,
+      and any specific deployment instructions or dependencies.
+    expected_output: >
+      A deployment manifest document (e.g., YAML, JSON, or Markdown format).
+      This document should be suitable for use by a deployment team or automated deployment system.
+    agent: final_assembler_agent
