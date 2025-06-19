@@ -1,11 +1,11 @@
 from crewai import Agent
-from ....utils.llm_factory import get_llm_for_agent # Adjusted path
+from ...llm_config import get_llm_for_agent # Point to the main llm_config.py
 # Removed: from ....tools.knowledge_base_tool import knowledge_base_tool_instance
 from mycrews.qrew.tools.agenttools import get_tools_for_agent, AgentName
 
 # Use the agent's role or a unique key for the lookup
 agent_identifier = "auth_coordinator_agent" # Matching the key in MODEL_BY_AGENT
-specific_llm = get_llm_for_agent(agent_type=agent_identifier)
+specific_llm = get_llm_for_agent(agent_identifier=agent_identifier) # Use correct param name
 
 auth_coordinator_agent = Agent(
     role="Authentication Coordinator",
