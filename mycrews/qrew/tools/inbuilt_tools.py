@@ -32,7 +32,14 @@ from ..tools.onnx_embedder import ONNXEmbedder # Ensure this is present
 from crewai.tools.base_tool import BaseTool  # Updated import path
 from pydantic import BaseModel, Field  # Updated to use standard Pydantic v2 imports
 
+from pydantic import BaseModel, Field, PrivateAttr # Updated to use standard Pydantic v2 imports
+
+from pydantic import BaseModel, Field # Updated to use standard Pydantic v2 imports
+
 # API Key Placeholders (using os.getenv)
+
+# LoggingRagToolWrapper class removed
+
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 EXA_API_KEY = os.getenv("EXA_API_KEY")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -289,7 +296,10 @@ def configure_rag_tools(knowledge_bases: dict):
     for name, path_or_config in knowledge_bases.items():
         try:
             tool_name = f"{name.replace('_', ' ').title()} RAG Search"
-            tool_description = f"Performs RAG search over the {name.replace('_', ' ')} knowledge base. Config: '{path_or_config}'."
+            if name == "web_components":
+                tool_description = "Essential for project analysis. Searches for existing projects, web components, and contextual information to understand and define new web-related project scopes. Use this for requests about websites or web applications."
+            else:
+                tool_description = f"Performs RAG search over the {name.replace('_', ' ')} knowledge base. Config: '{path_or_config}'."
 
             current_tool_instance = None
             if chroma_client and onnx_embedder_for_rag and onnx_embedder_for_rag.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY: # type: ignore
@@ -301,18 +311,59 @@ def configure_rag_tools(knowledge_bases: dict):
                         embedding_function=onnx_embedder_for_rag # Pass our ONNXEmbedder instance
                     )
 
+                    # === BEGIN NEW/REVISED SECTION ===
+                    # Explicitly load and add documents from source to the collection
+                    print(f"DEBUG_RAG_SETUP: Processing source path: {path_or_config} for collection: {collection_name}")
+                    documents_to_add = []
+                    ids_to_add = []
+                    # Assuming path_or_config is a directory path for now
+                    if os.path.isdir(path_or_config):
+                        for filename in os.listdir(path_or_config):
+                            file_path = os.path.join(path_or_config, filename)
+                            if os.path.isfile(file_path) and filename.endswith((".txt", ".md")): # Process .txt and .md files
+                                try:
+                                    with open(file_path, 'r', encoding='utf-8') as f:
+                                        content = f.read()
+                                    if content.strip(): # Ensure content is not just whitespace
+                                        documents_to_add.append(content)
+                                        ids_to_add.append(file_path) # Use file path as ID
+                                        print(f"DEBUG_RAG_SETUP: Prepared to add doc: {file_path}")
+                                    else:
+                                        print(f"DEBUG_RAG_SETUP: Skipped empty file: {file_path}")
+                                except Exception as e_read:
+                                    print(f"DEBUG_RAG_SETUP: Error reading file {file_path}: {e_read}")
+
+                        if documents_to_add:
+                            # Check if documents already exist by ID to avoid duplicates if this runs multiple times
+                            # This is a simple check; more robust would be to query existing IDs first.
+                            # For now, let's assume we clear the collection or handle duplicates if necessary.
+                            # A simple approach: try to get existing documents and only add new ones.
+                            # However, for this test, let's just add. If duplicates are an issue, collection.delete() could be used.
+                            print(f"DEBUG_RAG_SETUP: Adding {len(documents_to_add)} documents to collection '{collection_name}'...")
+                            # This .add() call SHOULD trigger ONNXEmbedder.embed_documents
+                            try:
+                                chroma_collection.add(documents=documents_to_add, ids=ids_to_add)
+                                print(f"DEBUG_RAG_SETUP: Finished adding documents to '{collection_name}'.")
+                            except Exception as e_add_docs:
+                                print(f"DEBUG_RAG_SETUP: Error adding documents to collection {collection_name}: {e_add_docs}")
+
+                        else:
+                            print(f"DEBUG_RAG_SETUP: No documents found to add from source: {path_or_config}")
+                    else:
+                        print(f"DEBUG_RAG_SETUP: Source path {path_or_config} is not a directory or not supported for auto-loading.")
+                    # === END NEW/REVISED SECTION ===
+
                     current_tool_instance = RagTool(
-                        source=path_or_config,
+                        # source=path_or_config, # RagTool might not need source if vector_store is pre-populated
                         name=tool_name,
                         description=tool_description,
-                        vector_store=chroma_collection # Pass the pre-configured collection
-                        # No 'embedder', 'db_path', or 'collection_name' params for RagTool directly
+                        vector_store=chroma_collection # Pass the pre-populated collection
                     )
-                    print(f"Initialized RAG tool for '{name}' using source '{path_or_config}' and ChromaDB collection '{collection_name}' with project's ONNXEmbedder.")
-                except Exception as e_rag_chroma:
-                    print(f"Warning: Failed to initialize RagTool for '{name}' with ChromaDB collection and ONNXEmbedder: {e_rag_chroma}.")
+                    print(f"Initialized RAG tool for '{name}' using pre-populated ChromaDB collection '{collection_name}'.")
+                except Exception as e_rag_setup: # Changed variable name for clarity
+                    print(f"Warning: Failed to initialize RagTool for '{name}' with pre-configured ChromaDB collection and ONNXEmbedder: {e_rag_setup}.")
                     # Fallback if specific setup fails
-                    current_tool_instance = RagTool(source=path_or_config, name=tool_name, description=tool_description)
+                    current_tool_instance = RagTool(source=path_or_config, name=tool_name, description=tool_description) # This will likely use default OpenAI
                     print(f"Initialized RAG tool for '{name}' with source '{path_or_config}' (ChromaDB/ONNXEmbedder setup failed, using RagTool default behavior).")
             else:
                 # Fallback if chroma_client or onnx_embedder_for_rag is not available/ready

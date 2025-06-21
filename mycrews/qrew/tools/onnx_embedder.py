@@ -40,40 +40,49 @@ class ONNXEmbedder(EmbeddingFunction): # Inherits from EmbeddingFunction
 
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        print(f"DEBUG_ONNXEMBEDDER: embed_documents called with {len(texts)} documents.")
         if not ONNXEmbedder.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY or self.actual_onnx_embed_function is None:
-            # Log this situation or return a specific value indicating failure
-            print("[ONNXEmbedder] Underlying embedding system not ready. Returning empty embeddings for documents.")
-            return [[] for _ in texts] # Return empty list of lists for each text
+            print("DEBUG_ONNXEMBEDDER: Underlying embedding system not ready. Returning empty embeddings for documents.")
+            return [[] for _ in texts]
 
         embeddings = []
-        for text_item in texts:
+        for i, text_item in enumerate(texts):
+            print(f"DEBUG_ONNXEMBEDDER: Processing document {i+1}/{len(texts)}, snippet: '{text_item[:100]}...'")
             try:
                 np_embedding = self.actual_onnx_embed_function(text_item)
-                if isinstance(np_embedding, np.ndarray) and np_embedding.size > 0 and np.any(np_embedding): # Check size and if not all zeros
+                if isinstance(np_embedding, np.ndarray) and np_embedding.size > 0 and np.any(np_embedding):
+                    print(f"DEBUG_ONNXEMBEDDER: Doc {i+1} - Embedding successful, shape: {np_embedding.shape}")
                     embeddings.append(np_embedding.tolist())
                 else:
-                    print(f"[ONNXEmbedder] Warning - received zero, empty, or invalid embedding for document item: '{text_item[:50]}...'")
-                    embeddings.append([]) # Append empty list for this item
+                    print(f"DEBUG_ONNXEMBEDDER: Doc {i+1} - Warning - received zero, empty, or invalid embedding. np_embedding type: {type(np_embedding)}, content: {str(np_embedding)[:100]}")
+                    embeddings.append([])
             except Exception as e:
-                print(f"[ONNXEmbedder] Error in embed_documents for item '{text_item[:50]}...': {e}")
-                embeddings.append([]) # Append empty list for this item
+                print(f"DEBUG_ONNXEMBEDDER: Doc {i+1} - Error in embed_documents: {e}")
+                import traceback
+                traceback.print_exc()
+                embeddings.append([])
+        print(f"DEBUG_ONNXEMBEDDER: embed_documents finished. Returning {len(embeddings)} embeddings.")
         return embeddings
 
     def embed_query(self, text: str) -> List[float]:
+        print(f"DEBUG_ONNXEMBEDDER: embed_query called with text snippet: '{text[:100]}...'")
         if not ONNXEmbedder.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY or self.actual_onnx_embed_function is None:
-            print("[ONNXEmbedder] Underlying embedding system not ready. Returning empty embedding for query.")
-            return [] # Return empty list for the query
+            print("DEBUG_ONNXEMBEDDER: Underlying embedding system not ready. Returning empty embedding for query.")
+            return []
 
         try:
             np_embedding = self.actual_onnx_embed_function(text)
             if isinstance(np_embedding, np.ndarray) and np_embedding.size > 0 and np.any(np_embedding): # Check size and if not all zeros
+                print(f"DEBUG_ONNXEMBEDDER: Query embedding successful, shape: {np_embedding.shape}")
                 return np_embedding.tolist()
             else:
-                print(f"[ONNXEmbedder] Warning - received zero, empty, or invalid embedding for query: '{text[:50]}...'")
-                return [] # Return empty list
+                print(f"DEBUG_ONNXEMBEDDER: Warning - received zero, empty, or invalid embedding for query. np_embedding type: {type(np_embedding)}, content: {str(np_embedding)[:100]}")
+                return []
         except Exception as e:
-            print(f"[ONNXEmbedder] Error in embed_query for item '{text[:50]}...': {e}")
-            return [] # Return empty list
+            print(f"DEBUG_ONNXEMBEDDER: Error in embed_query: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
 
     def __call__(self, texts: Documents) -> Embeddings:
         # texts is List[str] (aliased as Documents by ChromaDB)

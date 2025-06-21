@@ -84,11 +84,36 @@ def embed_text(text: str) -> np.ndarray:
         "token_type_ids": types
     }
     
-    # Get token embeddings from model
-    token_embeddings = session.run(None, inputs)[0][0]  # Shape: (seq_len, hidden_size)
+    print(f"DEBUG_EMBED: Input text snippet: '{text[:100]}...'") # Log input text
+    encoded = tokenizer.encode(text) # type: ignore # tokenizer might be None, but check above handles it
+    ids = np.array([encoded.ids], dtype=np.int64)
+    mask = np.array([encoded.attention_mask], dtype=np.int64)
+    types = np.array([encoded.type_ids], dtype=np.int64)
+    print(f"DEBUG_EMBED: Tokenized IDs shape: {ids.shape}, Mask shape: {mask.shape}, Types shape: {types.shape}")
+
+    inputs = {
+        "input_ids": ids,
+        "attention_mask": mask,
+        "token_type_ids": types
+    }
     
-    # Convert to sentence embedding using mean pooling
-    return np.mean(token_embeddings, axis=0)
+    try:
+        # Get token embeddings from model
+        token_embeddings_output = session.run(None, inputs)
+        # Assuming the first output of the model is the token embeddings
+        # And for a single sentence, the batch size is 1, so we take [0]
+        token_embeddings = token_embeddings_output[0][0]  # Shape: (seq_len, hidden_size)
+        print(f"DEBUG_EMBED: Raw token_embeddings shape from ONNX: {token_embeddings.shape}")
+
+        # Convert to sentence embedding using mean pooling
+        sentence_embedding = np.mean(token_embeddings, axis=0)
+        print(f"DEBUG_EMBED: Final sentence_embedding shape: {sentence_embedding.shape}, first 3 values: {sentence_embedding[:3]}")
+        return sentence_embedding
+    except Exception as e:
+        print(f"ERROR_EMBED: Exception during ONNX session run or pooling for text '{text[:100]}...': {e}")
+        import traceback
+        traceback.print_exc()
+        return np.zeros(EMBEDDING_DIMENSION, dtype=np.float32) # Return zero vector on error
 
 def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))

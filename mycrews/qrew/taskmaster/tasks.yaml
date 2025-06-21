@@ -1,21 +1,15 @@
 tasks:
   - description: >
-      Analyze the incoming {user_request} or {project_goal_statement} using available tools, including the Knowledge Base Query Tool, for relevant context or existing project information.
+      To begin, you **MUST** use the "Web Components RAG Search" tool to search for context related to the user's request: '{user_request}'. This is a critical first step.
+      Based on the output from the "Web Components RAG Search" tool AND the user request, analyze the core needs and deliverables.
       Clarify ambiguities and define the primary objectives, scope, and desired outcomes.
-      Consult with the IdeaInterpreterAgent if the request is vague or needs significant refinement even after knowledge base consultation.
+      If the request remains vague even after using the "Web Components RAG Search" tool, then consult with the IdeaInterpreterAgent.
       Input: {user_request}, {project_goal_statement}, {priority_level}.
     expected_output: >
       A JSON object adhering to the following schema:
       {
         "project_name": "string (unique and descriptive, or existing project name if identified)",
-        "refined_brief": "string (a concise summary of the project's purpose and key objectives)",
-        "is_new_project": "boolean (true if the request is for a new project, false otherwise)",
-        "recommended_next_stage": "string (e.g., 'architecture', 'execution', 'clarification')",
-        "project_scope": "string (e.g., 'web-only', 'mobile-only', 'full-stack', 'unknown')",
-        "key_deliverables": ["string (list of key deliverables)"],
-        "success_criteria": ["string (list of success criteria)"],
-        "initial_complexity_assessment": "string (e.g., 'low', 'medium', 'high')",
-        "potential_challenges": ["string (list of potential challenges, can be empty)"]
+        "refined_brief": "string (a concise summary of the project's purpose and key objectives)"
       }
       Ensure all string values within the JSON are properly escaped.
       The output MUST be only the JSON object itself, without any surrounding text or markdown code fences.
