@@ -32,13 +32,13 @@ class KnowledgeBaseTool(BaseTool): # Renamed from EnhancedKnowledgeBaseTool
         def __init__(self, outer_instance):
             self.outer_instance = outer_instance
 
-        def __call__(self, input_texts: List[str]) -> List[List[float]]:
+        def __call__(self, input: List[str]) -> List[List[float]]: # Renamed 'input_texts' to 'input'
             # This method now correctly matches ChromaDB's expected signature
             # and delegates to the outer class's __call__ method or _embed_text logic.
             # It's important that outer_instance.__call__ or a similar method
             # correctly processes a list of texts and returns a list of embeddings.
             # The KnowledgeBaseTool's __call__ method already does this.
-            return self.outer_instance.__call__(input_texts)
+            return self.outer_instance.__call__(input) # Use 'input' here as well
 
     def __init__(
         self,
