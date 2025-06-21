@@ -11,7 +11,14 @@ llm_initialization_statuses = []
 
 # --- Environment Variable Based Model Names ---
 # User can override these via environment variables if needed
-USER_SPECIFIED_GEMINI_MODEL = os.getenv("GEMINI_MODEL_NAME", "google_ai_studio/gemini-1.5-flash") # Default from user prompt, added prefix
+_gemini_model_env_var = os.getenv("GEMINI_MODEL_NAME")
+if _gemini_model_env_var and "gemini" in _gemini_model_env_var.lower() and not _gemini_model_env_var.startswith("google_ai_studio/"):
+    USER_SPECIFIED_GEMINI_MODEL = "google_ai_studio/" + _gemini_model_env_var
+elif _gemini_model_env_var: # If set, but not gemini, or already correctly prefixed
+    USER_SPECIFIED_GEMINI_MODEL = _gemini_model_env_var
+else: # Default if env var is not set
+    USER_SPECIFIED_GEMINI_MODEL = "google_ai_studio/gemini-1.5-flash"
+
 USER_SPECIFIED_OPENAI_MODEL = os.getenv("OPENAI_MODEL_NAME", "gpt-4o") # Default from user prompt
 
 # --- Gemini Model Constants (using USER_SPECIFIED_GEMINI_MODEL as the base for variations) ---
@@ -157,14 +164,21 @@ MODEL_BY_AGENT = {
 def get_api_key_for_model(model_name: str) -> Optional[str]:
     """Determines the appropriate API key environment variable name based on the model provider."""
     model_lower = model_name.lower()
-    if model_lower.startswith("gemini"):
+    # Check for Google AI Studio Gemini models first
+    if model_lower.startswith("google_ai_studio/gemini"):
         return os.getenv("GEMINI_API_KEY")
+    # Fallback for direct gemini/ prefix if it's ever used without google_ai_studio and means something else
+    elif model_lower.startswith("gemini/"): # Could be Vertex if not google_ai_studio
+        # This path might still lead to DefaultCredentialsError if ADC not set for Vertex
+        # but we prioritize explicit google_ai_studio calls with GEMINI_API_KEY
+        logger.warning(f"Model '{model_name}' starts with 'gemini/' but not 'google_ai_studio/'. Attempting GEMINI_API_KEY but Vertex AI might be assumed by LiteLLM without ADC.")
+        return os.getenv("GEMINI_API_KEY") # Or potentially a different key if Vertex had its own
     elif model_lower.startswith("gpt-") or model_lower.startswith("openai/"): # Common OpenAI prefixes
         return os.getenv("OPENAI_API_KEY")
     # Add other providers as needed:
     # elif model_lower.startswith("anthropic"):
     #     return os.getenv("ANTHROPIC_API_KEY")
-    logger.warning(f"Could not determine API key for model: {model_name}. No specific provider matched.")
+    logger.warning(f"Could not determine API key for model: {model_name}. No specific provider matched for API key lookup.")
     return None # Default to None if no specific provider match
 
 def get_llm_for_agent(agent_identifier: str, default_model_key: str = "default_agent_llm") -> Optional[LLM]:
