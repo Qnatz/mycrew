@@ -11,7 +11,7 @@ llm_initialization_statuses = []
 
 # --- Environment Variable Based Model Names ---
 # User can override these via environment variables if needed
-USER_SPECIFIED_GEMINI_MODEL = os.getenv("GEMINI_MODEL_NAME", "gemini/gemini-1.5-flash") # Default from user prompt
+USER_SPECIFIED_GEMINI_MODEL = os.getenv("GEMINI_MODEL_NAME", "google_ai_studio/gemini-1.5-flash") # Default from user prompt, added prefix
 USER_SPECIFIED_OPENAI_MODEL = os.getenv("OPENAI_MODEL_NAME", "gpt-4o") # Default from user prompt
 
 # --- Gemini Model Constants (using USER_SPECIFIED_GEMINI_MODEL as the base for variations) ---
@@ -19,10 +19,10 @@ USER_SPECIFIED_OPENAI_MODEL = os.getenv("OPENAI_MODEL_NAME", "gpt-4o") # Default
 # but primary model selection should be flexible.
 VERIFIED_GEMINI_1_5_FLASH = USER_SPECIFIED_GEMINI_MODEL # Main user-specified Gemini
 # Fallback/alternative Gemini models (can be adjusted or expanded)
-VERIFIED_GEMINI_1_5_FLASH_8B = "gemini/gemini-1.5-flash-8b"
-VERIFIED_GEMINI_2_0_FLASH = "gemini/gemini-2.0-flash"
-VERIFIED_GEMINI_2_0_FLASH_LITE = "gemini/gemini-2.0-flash-lite-001"
-VERIFIED_GEMINI_2_5_FLASH_PREVIEW = "gemini/gemini-2.5-flash-preview-04-17"
+VERIFIED_GEMINI_1_5_FLASH_8B = "google_ai_studio/gemini-1.5-flash-8b" # Added prefix
+VERIFIED_GEMINI_2_0_FLASH = "google_ai_studio/gemini-2.0-flash" # Added prefix
+VERIFIED_GEMINI_2_0_FLASH_LITE = "google_ai_studio/gemini-2.0-flash-lite-001" # Added prefix
+VERIFIED_GEMINI_2_5_FLASH_PREVIEW = "google_ai_studio/gemini-2.5-flash-preview-04-17" # Added prefix
 
 
 # --- OpenAI Model Constants ---
