@@ -53,5 +53,10 @@
     "name": "MockSocialTimeoutTest",
     "id": "mocksocialtimeouttest_55a9d73f",
     "path": "/app/mycrews/qrew/projects/mocksocialtimeouttest_55a9d73f"
+  },
+  "taskmaster_failed_project_8f370cc5": {
+    "name": "taskmaster_failed_project",
+    "id": "taskmaster_failed_project_8f370cc5",
+    "path": "/app/mycrews/qrew/projects/taskmaster_failed_project_8f370cc5"
   }
 }

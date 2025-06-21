@@ -10,11 +10,11 @@ from collections import OrderedDict # To maintain order for display after proces
 # Add the project root (/app) to sys.path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')) # Corrected path
 if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+    sys.path.append(project_root)
 # Add the project's src directory to sys.path to allow 'from crewai import ...'
 project_src_path = os.path.join(project_root, "src")
 if project_src_path not in sys.path:
-    sys.path.insert(1, project_src_path)
+    sys.path.append(project_src_path)
 
 # Ensure the llm_config is loaded first
 # We'll import llm_initialization_statuses after modifying llm_config.py
