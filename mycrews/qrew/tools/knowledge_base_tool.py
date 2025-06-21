@@ -7,6 +7,7 @@ import onnxruntime as ort
 from tokenizers import Tokenizer
 import os
 import logging
+from pathlib import Path # Added Path import
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -43,13 +44,23 @@ class KnowledgeBaseTool(BaseTool): # Renamed from EnhancedKnowledgeBaseTool
     def __init__(
         self,
         # memory_instance is removed
-        onnx_model_path: str = "models/onnx/model.onnx", # Default path from new tool
-        tokenizer_path: str = "models/onnx/tokenizer.json", # Default path from new tool
+        onnx_model_path: Optional[str] = None, # Default path from new tool
+        tokenizer_path: Optional[str] = None, # Default path from new tool
         kb_persist_path: str = "kb_chroma_storage", # Added kb_persist_path
         **kwargs
     ):
         super().__init__(**kwargs)
         # self.memory_instance removed
+
+        # Construct absolute paths for ONNX model and tokenizer
+        # Path(__file__).parent = mycrews/qrew/tools
+        # .parent = mycrews/qrew
+        # .parent = mycrews
+        # .parent = crewAI (repo root)
+        base_path = Path(__file__).parent.parent.parent.parent
+
+        effective_onnx_model_path = onnx_model_path if onnx_model_path is not None else str(base_path / "models/onnx/model.onnx")
+        effective_tokenizer_path = tokenizer_path if tokenizer_path is not None else str(base_path / "models/onnx/tokenizer.json")
 
         # Initialize ChromaDB for Knowledge Base
         try:
@@ -70,12 +81,12 @@ class KnowledgeBaseTool(BaseTool): # Renamed from EnhancedKnowledgeBaseTool
         try:
             options = ort.SessionOptions()
             options.intra_op_num_threads = os.cpu_count() or 1
-            self.embedding_session = ort.InferenceSession(onnx_model_path, options)
-            self.tokenizer = Tokenizer.from_file(tokenizer_path)
-            logger.info("Embedding model loaded successfully")
+            self.embedding_session = ort.InferenceSession(effective_onnx_model_path, options)
+            self.tokenizer = Tokenizer.from_file(effective_tokenizer_path)
+            logger.info(f"KnowledgeBaseTool: Embedding model loaded successfully from {effective_onnx_model_path}")
             ONNX_EMBEDDING_INITIALIZATION_STATUS[0] = ("ONNX Embedding Model", True)
         except Exception as e:
-            logger.error(f"Failed to load embedding model: {str(e)}")
+            logger.error(f"KnowledgeBaseTool: Failed to load embedding model from {effective_onnx_model_path} or {effective_tokenizer_path}: {str(e)}")
             self.embedding_session = None
             self.tokenizer = None
 

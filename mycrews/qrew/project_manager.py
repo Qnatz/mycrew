@@ -354,14 +354,23 @@ class ProjectStateManager:
             "timestamp": datetime.utcnow().isoformat()
         }
 
+        sanitized_error_details_for_summary = _sanitize_for_json(error_details.copy()) # Sanitize a copy for the summary message
+
         # Add to error summary
         # Ensure ErrorSummary can handle a JSON string or a more structured message.
-        # The original code had self.error_summary.add(stage_name, False, error_message)
-        # The new code from issue has: self.error_summary.add(stage_name, False, json.dumps(error_details, indent=2))
-        # Let's use the new version.
-        self.error_summary.add(stage_name, False, json.dumps(error_details, indent=2))
+        try:
+            error_details_json_str = json.dumps(sanitized_error_details_for_summary, indent=2)
+            self.error_summary.add(stage_name, False, error_details_json_str)
+        except TypeError as e:
+            # Fallback if sanitizing and dumping still somehow fails for the summary
+            self.error_summary.add(stage_name, False, f"Error details could not be serialized for summary: {str(e)}. Original error: {error_message}")
 
-        # Conditional logging
+
+        # Conditional logging (pass original error_details which might have mocks if needed by loggers, or sanitized ones)
+        # For simplicity and safety with external loggers, let's pass sanitized details here too.
+        # If loggers need original mocks, this needs adjustment.
+        sanitized_error_details_for_logging = _sanitize_for_json(error_details)
+
         if self.config.get("enable_kb_logging"): # Use .get for safety, though defaults should exist
             self._log_to_knowledge_base(error_details)
 

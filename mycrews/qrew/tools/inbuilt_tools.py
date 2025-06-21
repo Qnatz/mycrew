@@ -165,7 +165,16 @@ else:
     print("Warning: SERPER_API_KEY not found in environment. SerperDevTool will be disabled.")
     serper_dev_tool = None
 
-website_search_tool = WebsiteSearchTool()
+# Robust initialization for WebsiteSearchTool (RAG-based)
+try:
+    if onnx_embedder_for_rag and onnx_embedder_for_rag.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY:
+        website_search_tool = WebsiteSearchTool(embedder=onnx_embedder_for_rag)
+    else:
+        print("Warning: Initializing WebsiteSearchTool without custom ONNX embedder.")
+        website_search_tool = WebsiteSearchTool()
+except Exception as e:
+    print(f"CRITICAL: Failed to initialize WebsiteSearchTool: {e}. Tool will be None.")
+    website_search_tool = None
 
 # Path to the ONNX model directory from inbuilt_tools.py
 # inbuilt_tools.py -> tools -> qrew -> mycrews -> (root) -> models/onnx
