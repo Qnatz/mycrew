@@ -124,6 +124,7 @@ def run_qrew():
         print(f"Error during fallback_logger initial test: {e_fallback_test}")
 
     print("--- End of Logger Initialization Test ---\n")
+
     # --- The rest of the run_qrew() function continues below ---
     # Display LLM initialization status first using Rich
     display_model_initialization_status("[bold cyan]--- LLM Initialization ---[/bold cyan]", llm_initialization_statuses)
