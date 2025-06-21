@@ -62,7 +62,7 @@ class KnowledgeStorage(BaseKnowledgeStorage):
         Ensures ChromaDBMemory is ready. Currently a no-op as ChromaDBMemory
         initializes its store in its own __init__.
         """
-        self.logger.info(f"ObjectBoxKnowledgeStorage initialized for collection: {self.collection_name} at path: {self.db_memory._current_store_actual_path}")
+        self.logger.info(f"KnowledgeStorage initialized for collection: {self.collection_name} at path: {self.db_memory._current_store_actual_path} (using ChromaDB)")
         # No specific initialization steps needed here for ChromaDBMemory as it's done in its __init__.
         # This method can be expanded if future setup is required.
         pass
@@ -73,7 +73,7 @@ class KnowledgeStorage(BaseKnowledgeStorage):
         metadata: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
     ):
         """
-        Saves documents and their metadata into ObjectBox.
+        Saves documents and their metadata into ChromaDB.
         """
         if not self.db_memory:
             self.logger.error("ChromaDBMemory not initialized.")
@@ -100,7 +100,7 @@ class KnowledgeStorage(BaseKnowledgeStorage):
         score_threshold: float = 0.0, # Default to 0.0 to include all results above minimal similarity
     ) -> List[Dict[str, Any]]:
         """
-        Searches for documents in ObjectBox based on query texts.
+        Searches for documents in ChromaDB based on query texts.
         """
         if not self.db_memory:
             self.logger.error("ChromaDBMemory not initialized.")
@@ -144,7 +144,7 @@ class KnowledgeStorage(BaseKnowledgeStorage):
 
     def reset(self):
         """
-        Resets the knowledge storage by deleting the ObjectBox store directory.
+        Resets the knowledge storage by deleting the ChromaDB store directory.
         """
         if not self.db_memory or not self.db_memory._current_store_actual_path:
             self.logger.error("ChromaDBMemory instance or its store path is not available. Cannot reset.")
@@ -155,11 +155,11 @@ class KnowledgeStorage(BaseKnowledgeStorage):
         store_path = self.db_memory._current_store_actual_path
 
         try:
-            self.logger.info(f"Attempting to close ObjectBox store for collection: {self.collection_name}")
+            self.logger.info(f"Attempting to close vector store for collection: {self.collection_name}")
             # ChromaDBMemory.close_store() is a class method.
             # It closes the shared static store.
-            ChromaDBMemory.close_store()
-            self.logger.info(f"ObjectBox store closed for collection: {self.collection_name}")
+            ChromaDBMemory.close_store() # This refers to ChromaDBMemory's static method
+            self.logger.info(f"Vector store (ChromaDB) closed for collection: {self.collection_name}")
 
             if os.path.exists(store_path):
                 self.logger.info(f"Deleting store directory: {store_path}")

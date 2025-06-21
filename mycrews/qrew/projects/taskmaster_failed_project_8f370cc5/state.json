@@ -9,49 +9,55 @@
       "stage": "taskmaster",
       "success": false,
       "message": "{\n  \"error_message\": \"Taskmaster crew kickoff failed with exception: litellm.BadRequestError: LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model=google_ai_studio/gemini-1.5-flash\\n Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers\",\n  \"exception_type\": \"N/A\",\n  \"stack_trace\": \"  File \\\"<frozen runpy>\\\", line 198, in _run_module_as_main\\n  File \\\"<frozen runpy>\\\", line 88, in _run_code\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 356, in <module>\\n    run_qrew()\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 291, in run_qrew\\n    results = orchestrator.execute_pipeline(pipeline_inputs)\\n  File \\\"/app/mycrews/qrew/workflows/orchestrator.py\\\", line 379, in execute_pipeline\\n    self.state.fail_stage(\\\"taskmaster\\\", taskmaster_output.get(\\\"refined_brief\\\", \\\"Taskmaster critical failure\\\"))\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 350, in fail_stage\\n    \\\"stack_trace\\\": traceback.format_exc() if exception_obj else self._get_current_traceback(),\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 191, in _get_current_traceback\\n    return \\\"\\\".join(traceback.format_stack())\\n\",\n  \"input_context\": null,\n  \"stage\": \"taskmaster\",\n  \"project\": \"taskmaster_failed_project\",\n  \"timestamp\": \"2025-06-21T13:32:23.443904\"\n}",
-      "timestamp": "2025-06-21T14:21:47.352550"
+      "timestamp": "2025-06-21T14:57:14.492147"
     },
     {
       "stage": "taskmaster",
       "success": false,
       "message": "{\n  \"error_message\": \"Taskmaster crew kickoff failed with exception: litellm.BadRequestError: LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model=google_ai_studio/gemini-1.5-flash\\n Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers\",\n  \"exception_type\": \"N/A\",\n  \"stack_trace\": \"  File \\\"<frozen runpy>\\\", line 198, in _run_module_as_main\\n  File \\\"<frozen runpy>\\\", line 88, in _run_code\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 356, in <module>\\n    run_qrew()\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 291, in run_qrew\\n    results = orchestrator.execute_pipeline(pipeline_inputs)\\n  File \\\"/app/mycrews/qrew/workflows/orchestrator.py\\\", line 379, in execute_pipeline\\n    self.state.fail_stage(\\\"taskmaster\\\", taskmaster_output.get(\\\"refined_brief\\\", \\\"Taskmaster critical failure\\\"))\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 350, in fail_stage\\n    \\\"stack_trace\\\": traceback.format_exc() if exception_obj else self._get_current_traceback(),\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 191, in _get_current_traceback\\n    return \\\"\\\".join(traceback.format_stack())\\n\",\n  \"input_context\": null,\n  \"stage\": \"taskmaster\",\n  \"project\": \"taskmaster_failed_project\",\n  \"timestamp\": \"2025-06-21T13:33:05.807080\"\n}",
-      "timestamp": "2025-06-21T14:21:47.352575"
+      "timestamp": "2025-06-21T14:57:14.492168"
     },
     {
       "stage": "taskmaster",
       "success": false,
       "message": "{\n  \"error_message\": \"Taskmaster crew kickoff failed with exception: litellm.BadRequestError: LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model=google_ai_studio/gemini-1.5-flash\\n Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers\",\n  \"exception_type\": \"N/A\",\n  \"stack_trace\": \"  File \\\"<frozen runpy>\\\", line 198, in _run_module_as_main\\n  File \\\"<frozen runpy>\\\", line 88, in _run_code\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 356, in <module>\\n    run_qrew()\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 291, in run_qrew\\n    results = orchestrator.execute_pipeline(pipeline_inputs)\\n  File \\\"/app/mycrews/qrew/workflows/orchestrator.py\\\", line 379, in execute_pipeline\\n    self.state.fail_stage(\\\"taskmaster\\\", taskmaster_output.get(\\\"refined_brief\\\", \\\"Taskmaster critical failure\\\"))\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 350, in fail_stage\\n    \\\"stack_trace\\\": traceback.format_exc() if exception_obj else self._get_current_traceback(),\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 191, in _get_current_traceback\\n    return \\\"\\\".join(traceback.format_stack())\\n\",\n  \"input_context\": null,\n  \"stage\": \"taskmaster\",\n  \"project\": \"taskmaster_failed_project\",\n  \"timestamp\": \"2025-06-21T13:49:03.137850\"\n}",
-      "timestamp": "2025-06-21T14:21:47.352580"
+      "timestamp": "2025-06-21T14:57:14.492173"
     },
     {
       "stage": "taskmaster",
       "success": false,
       "message": "{\n  \"error_message\": \"Taskmaster crew kickoff failed with exception: litellm.BadRequestError: LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model=google_ai_studio/gemini-1.5-flash\\n Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers\",\n  \"exception_type\": \"N/A\",\n  \"stack_trace\": \"  File \\\"<frozen runpy>\\\", line 198, in _run_module_as_main\\n  File \\\"<frozen runpy>\\\", line 88, in _run_code\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 356, in <module>\\n    run_qrew()\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 291, in run_qrew\\n    results = orchestrator.execute_pipeline(pipeline_inputs)\\n  File \\\"/app/mycrews/qrew/workflows/orchestrator.py\\\", line 379, in execute_pipeline\\n    self.state.fail_stage(\\\"taskmaster\\\", taskmaster_output.get(\\\"refined_brief\\\", \\\"Taskmaster critical failure\\\"))\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 350, in fail_stage\\n    \\\"stack_trace\\\": traceback.format_exc() if exception_obj else self._get_current_traceback(),\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 191, in _get_current_traceback\\n    return \\\"\\\".join(traceback.format_stack())\\n\",\n  \"input_context\": null,\n  \"stage\": \"taskmaster\",\n  \"project\": \"taskmaster_failed_project\",\n  \"timestamp\": \"2025-06-21T13:49:41.580580\"\n}",
-      "timestamp": "2025-06-21T14:21:47.352584"
+      "timestamp": "2025-06-21T14:57:14.492177"
     },
     {
       "stage": "taskmaster",
       "success": false,
       "message": "{\n  \"error_message\": \"Taskmaster crew kickoff failed with exception: litellm.BadRequestError: LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model=google_ai_studio/gemini-1.5-flash\\n Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers\",\n  \"exception_type\": \"N/A\",\n  \"stack_trace\": \"  File \\\"<frozen runpy>\\\", line 198, in _run_module_as_main\\n  File \\\"<frozen runpy>\\\", line 88, in _run_code\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 356, in <module>\\n    run_qrew()\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 291, in run_qrew\\n    results = orchestrator.execute_pipeline(pipeline_inputs)\\n  File \\\"/app/mycrews/qrew/workflows/orchestrator.py\\\", line 379, in execute_pipeline\\n    self.state.fail_stage(\\\"taskmaster\\\", taskmaster_output.get(\\\"refined_brief\\\", \\\"Taskmaster critical failure\\\"))\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 350, in fail_stage\\n    \\\"stack_trace\\\": traceback.format_exc() if exception_obj else self._get_current_traceback(),\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 191, in _get_current_traceback\\n    return \\\"\\\".join(traceback.format_stack())\\n\",\n  \"input_context\": null,\n  \"stage\": \"taskmaster\",\n  \"project\": \"taskmaster_failed_project\",\n  \"timestamp\": \"2025-06-21T13:50:38.302434\"\n}",
-      "timestamp": "2025-06-21T14:21:47.352588"
+      "timestamp": "2025-06-21T14:57:14.492181"
     },
     {
       "stage": "taskmaster",
       "success": false,
       "message": "{\n  \"error_message\": \"Taskmaster crew kickoff failed with exception: litellm.BadRequestError: LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model=google_ai_studio/gemini-1.5-flash\\n Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers\",\n  \"exception_type\": \"N/A\",\n  \"stack_trace\": \"  File \\\"<frozen runpy>\\\", line 198, in _run_module_as_main\\n  File \\\"<frozen runpy>\\\", line 88, in _run_code\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 356, in <module>\\n    run_qrew()\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 291, in run_qrew\\n    results = orchestrator.execute_pipeline(pipeline_inputs)\\n  File \\\"/app/mycrews/qrew/workflows/orchestrator.py\\\", line 379, in execute_pipeline\\n    self.state.fail_stage(\\\"taskmaster\\\", taskmaster_output.get(\\\"refined_brief\\\", \\\"Taskmaster critical failure\\\"))\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 350, in fail_stage\\n    \\\"stack_trace\\\": traceback.format_exc() if exception_obj else self._get_current_traceback(),\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 191, in _get_current_traceback\\n    return \\\"\\\".join(traceback.format_stack())\\n\",\n  \"input_context\": null,\n  \"stage\": \"taskmaster\",\n  \"project\": \"taskmaster_failed_project\",\n  \"timestamp\": \"2025-06-21T14:21:47.353432\"\n}",
-      "timestamp": "2025-06-21T14:21:47.353550"
+      "timestamp": "2025-06-21T14:57:14.492184"
+    },
+    {
+      "stage": "taskmaster",
+      "success": false,
+      "message": "{\n  \"error_message\": \"Taskmaster crew kickoff failed with exception: litellm.BadRequestError: LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model=google_ai_studio/gemini-1.5-flash\\n Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers\",\n  \"exception_type\": \"N/A\",\n  \"stack_trace\": \"  File \\\"<frozen runpy>\\\", line 198, in _run_module_as_main\\n  File \\\"<frozen runpy>\\\", line 88, in _run_code\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 356, in <module>\\n    run_qrew()\\n  File \\\"/app/mycrews/qrew/main.py\\\", line 291, in run_qrew\\n    results = orchestrator.execute_pipeline(pipeline_inputs)\\n  File \\\"/app/mycrews/qrew/workflows/orchestrator.py\\\", line 379, in execute_pipeline\\n    self.state.fail_stage(\\\"taskmaster\\\", taskmaster_output.get(\\\"refined_brief\\\", \\\"Taskmaster critical failure\\\"))\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 350, in fail_stage\\n    \\\"stack_trace\\\": traceback.format_exc() if exception_obj else self._get_current_traceback(),\\n  File \\\"/app/mycrews/qrew/project_manager.py\\\", line 191, in _get_current_traceback\\n    return \\\"\\\".join(traceback.format_stack())\\n\",\n  \"input_context\": null,\n  \"stage\": \"taskmaster\",\n  \"project\": \"taskmaster_failed_project\",\n  \"timestamp\": \"2025-06-21T14:57:14.497011\"\n}",
+      "timestamp": "2025-06-21T14:57:14.497261"
     }
   ],
   "status": "failed",
   "resume_attempts": {
     "taskmaster": [
       {
-        "timestamp": "2025-06-21T14:21:47.429798",
+        "timestamp": "2025-06-21T14:57:14.658949",
         "error": "Unknown error",
         "traceback": "No traceback",
         "attempt_count": 1
       }
     ]
   },
-  "updated_at": "2025-06-21T14:21:47.459499"
+  "updated_at": "2025-06-21T14:57:14.711297"
 }
