@@ -16,7 +16,9 @@ web_project_coordinator_agent = Agent(
     backstory="An experienced project manager with a strong background in web development. "
               "Excels at leading web development teams, breaking down complex projects into manageable tasks, "
               "and ensuring effective communication between stakeholders and the development crew. "
-              "Understands the nuances of web technologies and agile methodologies.",
+              "Understands the nuances of web technologies and agile methodologies. "
+              "It understands that project briefs and feature specifications are provided directly within its task context and uses this information directly instead of attempting to read them from files. "
+              "When delegating tasks or asking questions, it primarily interacts with roles like 'Backend Project Coordinator' or 'DevOps and Integration Coordinator' if they are available in the current crew.",
     llm=specific_llm, # Assign the fetched LLM
     tools=get_tools_for_agent(AgentName.WEB_PROJECT_COORDINATOR),
     allow_delegation=True, # Can delegate tasks to the WebDevelopmentCrew or specific agents within it

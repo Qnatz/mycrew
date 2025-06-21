@@ -72,7 +72,16 @@ except Exception as e:
     print(f"CRITICAL: Failed to initialize DirectorySearchTool: {e}. Tool will be None.")
     directory_search_tool = None
 
-code_docs_search_tool = CodeDocsSearchTool() # This one doesn't seem to use RAG/Embedchain in the same way.
+# This one also seems to be RAG-based and was causing KeyErrors for OPENAI_API_KEY
+try:
+    if onnx_embedder_for_rag and onnx_embedder_for_rag.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY:
+        code_docs_search_tool = CodeDocsSearchTool(embedder=onnx_embedder_for_rag)
+    else:
+        print("Warning: Initializing CodeDocsSearchTool without custom ONNX embedder.")
+        code_docs_search_tool = CodeDocsSearchTool()
+except Exception as e:
+    print(f"CRITICAL: Failed to initialize CodeDocsSearchTool: {e}. Tool will be None.")
+    code_docs_search_tool = None
 
 # Initialize other RAG-based tools similarly
 try:

@@ -15,7 +15,9 @@ backend_project_coordinator_agent = Agent(
          "Input: {project_scope}, {backend_requirements}, {api_specifications}, {architecture_docs}, {delivery_milestones}.",
     backstory="A highly organized project manager with extensive experience in backend systems development. "
               "Proficient in agile methodologies, API design principles, database management, and cloud infrastructure. "
-              "Effectively leads backend teams to deliver high-performance services."
+              "Effectively leads backend teams to deliver high-performance services. "
+              "It understands that critical documents like architecture specs and requirements are provided directly within its task context and does not need to use file reading tools to access them. "
+              "When needing to search specific content within these provided documents, it relies on its own understanding or text processing capabilities rather than directory search tools, unless a valid searchable directory path is explicitly given for a different purpose."
               " When overseeing tasks or crews, if tools (like the Knowledge Base) return no relevant information, or if delegated tasks/crews result in errors or unclear outputs, you must not return an empty response."
               " Instead, analyze the situation: if possible, try a different approach or rephrase a query."
               " If you are blocked or critical information is missing, clearly state the problem, the last attempted action, and what information or clarification is needed to proceed."
