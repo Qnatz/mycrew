@@ -9,6 +9,7 @@ from mycrews.qrew.llm_config import (
     llm_initialization_statuses, # To check status updates
     get_api_key_for_model,
     CFG_OPENAI_GPT4O_DEFAULT, # Example OpenAI config
+    CFG_OPENAI_GPT4O_DETERMINISTIC, # Added missing import
     CFG_GEMINI_1_5_FLASH_DEFAULT # Example Gemini config
 )
 

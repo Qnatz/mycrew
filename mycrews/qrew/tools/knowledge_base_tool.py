@@ -1,5 +1,5 @@
 from crewai.tools import BaseTool
-from typing import Union, Any, Optional
+from typing import Union, Any, Optional, List # Added List
 import chromadb # Added import
 from chromadb.config import Settings # Added import
 import numpy as np
@@ -28,6 +28,18 @@ class KnowledgeBaseTool(BaseTool): # Renamed from EnhancedKnowledgeBaseTool
     kb_client: Optional[chromadb.ClientAPI] = None # Changed API to ClientAPI
     kb_collection: Optional[chromadb.Collection] = None # Added kb_collection
 
+    class _ChromaDBEmbedder:
+        def __init__(self, outer_instance):
+            self.outer_instance = outer_instance
+
+        def __call__(self, input_texts: List[str]) -> List[List[float]]:
+            # This method now correctly matches ChromaDB's expected signature
+            # and delegates to the outer class's __call__ method or _embed_text logic.
+            # It's important that outer_instance.__call__ or a similar method
+            # correctly processes a list of texts and returns a list of embeddings.
+            # The KnowledgeBaseTool's __call__ method already does this.
+            return self.outer_instance.__call__(input_texts)
+
     def __init__(
         self,
         # memory_instance is removed
@@ -44,12 +56,10 @@ class KnowledgeBaseTool(BaseTool): # Renamed from EnhancedKnowledgeBaseTool
             os.makedirs(kb_persist_path, exist_ok=True)
             self.kb_client = chromadb.PersistentClient(path=kb_persist_path, settings=Settings(allow_reset=False))
 
-            logger.info(f"DEBUG: Type of self before get_or_create_collection: {type(self)}")
-            logger.info(f"DEBUG: Type of self.__call__ before get_or_create_collection: {type(self.__call__)}")
-
             # The embedding_function is set to self, so this class needs a __call__ method.
-            # Trying self.__call__ directly
-            self.kb_collection = self.kb_client.get_or_create_collection(name="knowledge_base", embedding_function=self.__call__)
+            # Use the dedicated embedder instance
+            embedder_instance = self._ChromaDBEmbedder(self)
+            self.kb_collection = self.kb_client.get_or_create_collection(name="knowledge_base", embedding_function=embedder_instance)
             logger.info(f"ChromaDB client initialized for knowledge base at {kb_persist_path}")
         except Exception as e:
             logger.error(f"Failed to initialize ChromaDB for knowledge base: {str(e)}", exc_info=True)

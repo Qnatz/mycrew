@@ -10,9 +10,21 @@ import hashlib
 from pathlib import Path
 from datetime import datetime
 from .utils import ErrorSummary
+from unittest.mock import MagicMock # Added for type checking
 
 PROJECTS_INDEX = Path(__file__).parent / "projects_index.json"
 PROJECTS_ROOT = Path(__file__).parent / "projects/"
+
+def _sanitize_for_json(item: Any) -> Any:
+    """Recursively sanitize items for JSON serialization, converting MagicMock to str."""
+    if isinstance(item, MagicMock):
+        return str(item)
+    elif isinstance(item, dict):
+        return {key: _sanitize_for_json(value) for key, value in item.items()}
+    elif isinstance(item, list):
+        return [_sanitize_for_json(element) for element in item]
+    # Add other non-serializable types here if needed
+    return item
 
 class ProjectStateManager:
     def __init__(self, project_name, config: Optional[Dict[str, bool]] = None):
@@ -83,7 +95,7 @@ class ProjectStateManager:
         """Logs error details to ChromaDB if enabled."""
         if self.chroma_logger:
             try:
-                log_content = f"Error in stage {error_details.get('stage', 'Unknown')}: {error_details.get('error', 'No error message')}"
+                log_content = f"Error in stage {error_details.get('stage', 'Unknown')}: {error_details.get('error_message', 'No error message')}" # Changed 'error' to 'error_message'
                 # Metadata is the error_details dictionary itself
                 # log_type is "error"
                 self.chroma_logger.log(
@@ -284,7 +296,8 @@ class ProjectStateManager:
         self.state_file.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            self.state_file.write_text(json.dumps(self.state, indent=2))
+            sanitized_state = _sanitize_for_json(self.state)
+            self.state_file.write_text(json.dumps(sanitized_state, indent=2))
         except Exception as e:
             print(f"Error saving state to state.json: {e}")
             # Optionally, log this error to error_summary or handle as critical

@@ -43,8 +43,68 @@ code_interpreter_tool = CodeInterpreterTool()
 file_read_tool = FileReadTool()
 file_write_tool = FileWriterTool()
 directory_read_tool = DirectoryReadTool()
-directory_search_tool = DirectorySearchTool()
-code_docs_search_tool = CodeDocsSearchTool()
+
+# Initialize RAG-based tools with ONNX embedder if available, else try default (which might fail if OPENAI_API_KEY is missing)
+# We will wrap their initialization in try-except to prevent crashes at import time.
+
+# Attempt to initialize onnx_embedder_for_rag first
+onnx_embedder_for_rag: Optional[ONNXEmbedder] = None
+try:
+    onnx_embedder_for_rag = ONNXEmbedder()
+    if not onnx_embedder_for_rag.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY:
+        print(f"inbuilt_tools.py: Warning - ONNXEmbedder for RAG's underlying system in .embed_and_store is not ready. RAG tool embeddings may not work as expected.")
+    print(f"inbuilt_tools.py: ONNXEmbedder for RAG tools created successfully.")
+except ImportError as ie:
+    print(f"inbuilt_tools.py: CRITICAL - Failed to import or initialize ONNXEmbedder for RAG: {ie}. RAG-based tools will use default embeddings or may fail if API keys are missing.")
+    onnx_embedder_for_rag = None # Ensure it's None if init fails
+except Exception as e:
+    print(f"inbuilt_tools.py: Warning - Failed to initialize ONNXEmbedder for RAG: {e}. RAG-based tools will use default embeddings or may fail if API keys are missing.")
+    onnx_embedder_for_rag = None # Ensure it's None if init fails
+
+
+try:
+    if onnx_embedder_for_rag and onnx_embedder_for_rag.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY:
+        directory_search_tool = DirectorySearchTool(embedder=onnx_embedder_for_rag)
+    else:
+        print("Warning: Initializing DirectorySearchTool without custom ONNX embedder. May default to OpenAI or fail if key missing.")
+        directory_search_tool = DirectorySearchTool()
+except Exception as e:
+    print(f"CRITICAL: Failed to initialize DirectorySearchTool: {e}. Tool will be None.")
+    directory_search_tool = None
+
+code_docs_search_tool = CodeDocsSearchTool() # This one doesn't seem to use RAG/Embedchain in the same way.
+
+# Initialize other RAG-based tools similarly
+try:
+    if onnx_embedder_for_rag and onnx_embedder_for_rag.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY:
+        txt_search_tool = TXTSearchTool(embedder=onnx_embedder_for_rag)
+    else:
+        print("Warning: Initializing TXTSearchTool without custom ONNX embedder.")
+        txt_search_tool = TXTSearchTool()
+except Exception as e:
+    print(f"CRITICAL: Failed to initialize TXTSearchTool: {e}. Tool will be None.")
+    txt_search_tool = None
+
+try:
+    if onnx_embedder_for_rag and onnx_embedder_for_rag.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY:
+        pdf_search_tool = PDFSearchTool(embedder=onnx_embedder_for_rag)
+    else:
+        print("Warning: Initializing PDFSearchTool without custom ONNX embedder.")
+        pdf_search_tool = PDFSearchTool()
+except Exception as e:
+    print(f"CRITICAL: Failed to initialize PDFSearchTool: {e}. Tool will be None.")
+    pdf_search_tool = None
+
+try:
+    if onnx_embedder_for_rag and onnx_embedder_for_rag.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY:
+        mdx_search_tool = MDXSearchTool(embedder=onnx_embedder_for_rag)
+    else:
+        print("Warning: Initializing MDXSearchTool without custom ONNX embedder.")
+        mdx_search_tool = MDXSearchTool()
+except Exception as e:
+    print(f"CRITICAL: Failed to initialize MDXSearchTool: {e}. Tool will be None.")
+    mdx_search_tool = None
+
 
 # 1. Initialize the *original* GithubSearchTool from crewai_tools
 raw_github_search_tool: Optional[OriginalCrewAIGithubSearchTool] = None # Type hint for clarity
@@ -71,10 +131,6 @@ github_search_tool = GithubSearchWrapperTool() # This is the tool exposed to age
 print("GithubSearchWrapperTool instance created to be used by agents.")
 if raw_github_search_tool is None:
     print("Note: The underlying original GitHub search functionality for the wrapper is NOT available.")
-
-txt_search_tool = TXTSearchTool()
-pdf_search_tool = PDFSearchTool()
-mdx_search_tool = MDXSearchTool()
 
 # Robust initialization for EXASearchTool
 if EXA_API_KEY:
