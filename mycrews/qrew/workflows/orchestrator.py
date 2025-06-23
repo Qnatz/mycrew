@@ -226,6 +226,7 @@ class WorkflowOrchestrator:
 
         taskmaster_task = Task(
             description=f"Process the user request: '{user_request}'. Your primary goal is to determine if this is a new or existing project and then to define its initial parameters. "
+                        f"Follow these steps and structure your FINAL JSON output accordingly using the specified keys: "
                         f"1. Analyze the request to understand its core needs and deliverables. "
                         f"2. To check for existing relevant projects or context: "
                         f"   - Prioritize using any available RAG search tools (e.g., for web components or other knowledge bases you have access to) for contextual information. "
