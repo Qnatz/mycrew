@@ -301,13 +301,20 @@ class WorkflowOrchestrator:
                 "taskmaster_error": f"Error loading or processing tasks.yaml: {e}"
             }
 
+        # --- Simplified Task for LLM Connection Test ---
+        task_description_simple = f"What is 2+2? Respond with only the number and nothing else. User request was: '{user_request}'"
+        task_expected_output_simple = "A single number representing the sum of 2+2."
+
+        logging.info(f"DEBUG: Using simplified task for LLM connection test: '{task_description_simple}'")
+
         taskmaster_task = Task(
-            description=task_description,
+            description=task_description_simple,
             agent=taskmaster_agent,
-            expected_output=task_expected_output, # Expected output from YAML
-            guardrail=validate_taskmaster_yaml_output, # Use the new guardrail
+            expected_output=task_expected_output_simple,
+            guardrail=None, # No complex guardrail for this simple test
             max_retries=1
         )
+        # --- End Simplified Task ---
 
         task_crew = Crew(
             agents=[taskmaster_agent],
