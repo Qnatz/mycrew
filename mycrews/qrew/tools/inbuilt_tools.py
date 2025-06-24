@@ -384,7 +384,7 @@ def get_rag_tool(name: str):
     return _configured_rag_tools.get(name)
 
 # Preconfigured Tool Groups
-file_system_tools = [file_read_tool, file_write_tool, directory_read_tool, directory_search_tool]
+file_system_tools = [file_read_tool, file_write_tool, directory_read_tool] # Removed directory_search_tool
 search_tools_general = [serper_dev_tool, exa_search_tool, website_search_tool]
 code_search_tools = [code_docs_search_tool, github_search_tool]
 
@@ -404,7 +404,7 @@ dev_utility_tools = [
     file_write_tool
 ]
 
-coordinator_tools = [file_read_tool, directory_search_tool, github_search_tool, website_search_tool]
+coordinator_tools = [file_read_tool, github_search_tool, website_search_tool] # Removed directory_search_tool
 base_developer_tools = file_system_tools + [code_interpreter_tool, github_search_tool, code_docs_search_tool, ai_code_generator]
 
 python_docs_tool = CodeDocsSearchTool(name="Python Documentation Search", description="Searches official Python documentation.")
