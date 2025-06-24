@@ -506,14 +506,16 @@ class WorkflowOrchestrator:
                 actual_project_name = taskmaster_output_raw.get("project_name")
                 logging.info(f"Taskmaster returned project name: {actual_project_name}")
 
-                temp_checker_psm = ProjectStateManager(project_name=actual_project_name, load_existing=True)
-                is_truly_new_project = not temp_checker_psm.project_exists()
-                del temp_checker_psm
+                # Initialize ProjectStateManager. project_info['status'] will be 'new' or 'continuing'.
+                current_project_state_manager = ProjectStateManager(actual_project_name)
+                is_truly_new_project = (current_project_state_manager.project_info.get("status") == "new")
 
-                self.state = ProjectStateManager(actual_project_name)
+                self.state = current_project_state_manager # Assign to self.state
 
+                # project_info from ProjectStateManager already contains name, id, path.
+                # We add/update other relevant info.
                 self.state.set_project_info("refined_brief", taskmaster_output_raw.get("refined_brief"))
-                self.state.set_project_info("is_new_project", is_truly_new_project)
+                self.state.set_project_info("is_new_project", is_truly_new_project) # Ensure this is explicitly set based on our check
 
                 recommended_next_stage = "architecture"
                 project_scope = "unknown"
@@ -521,7 +523,7 @@ class WorkflowOrchestrator:
                 self.state.set_project_info("recommended_next_stage", recommended_next_stage)
                 self.state.set_project_info("project_scope", project_scope)
 
-                logging.info(f"Project '{actual_project_name}' is_new_project: {is_truly_new_project}. Defaulted next_stage: '{recommended_next_stage}', scope: '{project_scope}'.")
+                logging.info(f"Project '{actual_project_name}' is_new_project (determined by ProjectStateManager): {is_truly_new_project}. Defaulted next_stage: '{recommended_next_stage}', scope: '{project_scope}'.")
 
                 current_artifacts["taskmaster"] = {
                     "project_name": actual_project_name,
@@ -530,6 +532,8 @@ class WorkflowOrchestrator:
                     "recommended_next_stage": recommended_next_stage,
                     "project_scope": project_scope
                 }
+                # ProjectStateManager's __init__ handles initial state loading or creation.
+                # Now mark the 'taskmaster' stage as started and completed for this session.
                 self.state.start_stage("taskmaster")
                 self.state.complete_stage("taskmaster", artifacts=current_artifacts["taskmaster"])
                 initial_inputs["project_name"] = actual_project_name
