@@ -385,39 +385,50 @@ class WorkflowOrchestrator:
                 "taskmaster_error": "Task .output attribute missing after kickoff"
             }
 
-        # After guardrail execution, task.output is a TaskOutput object.
-        # The guardrail's processed dictionary (if successful) should be in task.output.exported_output.
-        if taskmaster_task.output and isinstance(taskmaster_task.output.exported_output, dict):
-            # Guardrail was successful and returned a dictionary.
-            # This dictionary should contain 'project_name' and 'refined_brief'.
-            logging.info(f"Taskmaster workflow successful. Output from guardrail (exported_output): {taskmaster_task.output.exported_output}")
-            return taskmaster_task.output.exported_output
-        else:
-            # This means the guardrail failed, or did not produce a dict in exported_output,
-            # or task.output itself is None.
-            error_message = "Taskmaster: Guardrail failed or task output processing resulted in non-dict."
-            raw_output_detail = ""
-            exported_output_detail = ""
+        # After crew.kickoff(), taskmaster_task.output is a TaskOutput object.
+        # The guardrail (validate_taskmaster_yaml_output) was called by CrewAI during execution.
+        # If the guardrail did not raise an exception or cause CrewAI to halt (e.g. by returning False),
+        # we assume the content in taskmaster_task.output.raw is what the guardrail validated.
+        # We then re-apply the JSON extraction from the raw output.
+        if taskmaster_task.output and hasattr(taskmaster_task.output, 'raw') and isinstance(taskmaster_task.output.raw, str):
+            output_str = taskmaster_task.output.raw.strip()
+            # Apply the same JSON extraction logic used inside the guardrail
+            match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", output_str, re.DOTALL | re.IGNORECASE)
+            json_str_to_parse = ""
+            if match:
+                json_str_to_parse = match.group(1)
+            else:
+                first_brace = output_str.find('{')
+                last_brace = output_str.rfind('}')
+                if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+                    json_str_to_parse = output_str[first_brace:last_brace+1]
+                else:
+                    json_str_to_parse = output_str # Fallback, try to parse the whole raw string
 
-            if taskmaster_task.output:
-                # Try to get a more specific error if the guardrail returned (False, "message")
-                # Note: CrewAI might place the guardrail's error message in task.output.raw if it's a simple string failure.
-                # Or, if an exception was raised and caught by CrewAI, it might be in task.output.error (less common for guardrails).
-                # For now, let's assume if exported_output is not a dict, the guardrail effectively failed or the task did.
-                if hasattr(taskmaster_task.output, 'raw') and isinstance(taskmaster_task.output.raw, str):
-                    raw_output_detail = taskmaster_task.output.raw
-                if hasattr(taskmaster_task.output, 'exported_output'): # Check if exported_output exists
-                    exported_output_detail = str(taskmaster_task.output.exported_output) # Log what it was
-                    if isinstance(taskmaster_task.output.exported_output, str): # Guardrail might return (False, "error_string")
-                         error_message = f"Taskmaster: Guardrail returned error: {taskmaster_task.output.exported_output}"
+            try:
+                data = json.loads(json_str_to_parse)
+                # We still need to validate the structure here, as the guardrail's return
+                # of (True, data) doesn't automatically make 'data' the task.output.
+                # The guardrail primarily acts as a validation step that CrewAI uses.
+                if isinstance(data, dict) and \
+                   "project_name" in data and isinstance(data["project_name"], str) and data["project_name"].strip() and \
+                   "refined_brief" in data and isinstance(data["refined_brief"], str) and data["refined_brief"].strip():
+                    logging.info(f"Taskmaster workflow successful. Parsed from raw output after guardrail validation: {data}")
+                    return data # This dict only has project_name and refined_brief
+                else:
+                    logging.error(f"Taskmaster output parsed from raw, but not a valid dict or missing/invalid keys. Data: {data}. Original raw: '{taskmaster_task.output.raw}'")
+            except json.JSONDecodeError as e:
+                logging.error(f"Failed to parse JSON from task.output.raw: '{json_str_to_parse}'. Error: {e}. Original raw: '{taskmaster_task.output.raw}'")
 
-
-            logging.error(f"{error_message} Exported_output was: '{exported_output_detail}'. Raw output (if any): '{raw_output_detail}'")
-            return {
-                "project_name": "error_taskmaster_processing_failed",
-                "refined_brief": error_message, # Provide more specific error if available
-                "taskmaster_error": error_message
-            }
+        # If we reach here, something went wrong with output processing or the output object itself
+        error_message = "Taskmaster: Failed to obtain and parse valid dictionary output from raw response after guardrail."
+        raw_output_detail = taskmaster_task.output.raw if (taskmaster_task.output and hasattr(taskmaster_task.output, 'raw')) else "No raw output"
+        logging.error(f"{error_message} Raw output: '{raw_output_detail}'")
+        return {
+            "project_name": "error_taskmaster_raw_parse_failed", # More specific error key
+            "refined_brief": error_message,
+            "taskmaster_error": error_message
+        }
 
     def execute_pipeline(self, initial_inputs: dict, mock_taskmaster_output: Optional[dict] = None):
         current_artifacts = {}
