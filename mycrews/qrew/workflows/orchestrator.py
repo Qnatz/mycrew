@@ -14,74 +14,96 @@ from .tech_vetting_flow import run_tech_vetting_workflow # Added import
 from ..project_manager import ProjectStateManager
 from ..utils import RichProjectReporter # Added import
 
-# Guardrail function for Taskmaster output
-def validate_taskmaster_output(task_output: TaskOutput) -> tuple[bool, Any]: # Changed signature
+import yaml # Added for loading tasks from YAML
+
+# Guardrail function for Taskmaster output (original, for old hardcoded task)
+def validate_taskmaster_hardcoded_output(task_output: TaskOutput) -> tuple[bool, Any]:
     if not hasattr(task_output, 'raw') or not isinstance(task_output.raw, str):
         return False, "Guardrail input (task_output.raw) must be a string and present."
-
     output_str = task_output.raw.strip()
-
-    # Attempt to extract JSON from markdown code blocks
-    # Matches ```json ... ``` or ``` ... ```
     match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", output_str, re.DOTALL | re.IGNORECASE)
     if match:
         json_str = match.group(1)
     else:
-        # Fallback: if no markdown block, try to find the first '{' and last '}'
-        # This is less robust and might grab incorrect parts if there's other text with braces.
         first_brace = output_str.find('{')
         last_brace = output_str.rfind('}')
         if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
             json_str = output_str[first_brace:last_brace+1]
         else:
-            # If no clear JSON structure is found, use the original string for the attempt
             json_str = output_str
-
     try:
-        # It's important to log what string is being attempted for parsing
-        logging.info(f"Guardrail: Attempting to parse as JSON: '{json_str}'") # ADD THIS LINE
+        logging.info(f"Guardrail (hardcoded): Attempting to parse as JSON: '{json_str}'")
         data = json.loads(json_str)
         if not isinstance(data, dict):
-            # Log the problematic string if it parsed but wasn't a dict
             logging.warning(f"Parsed data is not a dictionary. Raw (cleaned) string was: {json_str}")
             return False, "Output must be a JSON dictionary."
-
         required_keys = ["project_name", "refined_brief", "is_new_project", "recommended_next_stage", "project_scope"]
         for key in required_keys:
             if key not in data:
                 logging.warning(f"Missing key '{key}' in parsed JSON. Raw (cleaned) string was: {json_str}")
                 return False, f"Missing key in output: {key}"
-        # ... (rest of the specific key validations for type) ...
-        if not isinstance(data["project_name"], str) or not data["project_name"].strip():
-            logging.warning(f"Validation failed for 'project_name'. Raw (cleaned) string was: {json_str}")
-            return False, "project_name must be a non-empty string."
-        if not isinstance(data["refined_brief"], str) or not data["refined_brief"].strip():
-            logging.warning(f"Validation failed for 'refined_brief'. Raw (cleaned) string was: {json_str}")
-            return False, "refined_brief must be a non-empty string."
-        if not isinstance(data["is_new_project"], bool):
-            logging.warning(f"Validation failed for 'is_new_project'. Raw (cleaned) string was: {json_str}")
-            return False, "is_new_project must be a boolean."
-        if not isinstance(data["recommended_next_stage"], str) or not data["recommended_next_stage"].strip():
-            logging.warning(f"Validation failed for 'recommended_next_stage'. Raw (cleaned) string was: {json_str}")
-            return False, "recommended_next_stage must be a non-empty string."
-        if not isinstance(data["project_scope"], str) or not data["project_scope"].strip():
-            logging.warning(f"Validation failed for 'project_scope'. Raw (cleaned) string was: {json_str}")
-            return False, "project_scope must be a non-empty string."
-
+        if not isinstance(data["project_name"], str) or not data["project_name"].strip(): return False, "project_name must be a non-empty string."
+        if not isinstance(data["refined_brief"], str) or not data["refined_brief"].strip(): return False, "refined_brief must be a non-empty string."
+        if not isinstance(data["is_new_project"], bool): return False, "is_new_project must be a boolean."
+        if not isinstance(data["recommended_next_stage"], str) or not data["recommended_next_stage"].strip(): return False, "recommended_next_stage must be a non-empty string."
+        if not isinstance(data["project_scope"], str) or not data["project_scope"].strip(): return False, "project_scope must be a non-empty string."
         known_scopes = ["web-only", "mobile-only", "backend-only", "full-stack", "documentation-only", "unknown"]
         if data["project_scope"] not in known_scopes:
-            print(f"Warning: Taskmaster output 'project_scope' ('{data['project_scope']}') is not in known scopes: {known_scopes}. Proceeding with the provided scope.")
-            # Depending on strictness, this could be a validation failure:
-            # logging.warning(f"Validation failed for 'project_scope' value. Raw (cleaned) string was: {json_str}")
-            # return False, f"project_scope must be one of {known_scopes}."
+            print(f"Warning: Taskmaster output 'project_scope' ('{data['project_scope']}') is not in known scopes: {known_scopes}. Proceeding.")
+        return True, data
+    except json.JSONDecodeError as e:
+        logging.error(f"Guardrail (hardcoded): Failed to decode JSON. Error: {e}. Raw string was: '{json_str}'. Original: '{output_str}'")
+        return False, "Output must be valid JSON."
+    except Exception as e:
+        logging.error(f"Validation error (hardcoded): {str(e)}. Raw string was: '{json_str}'. Original: '{output_str}'", exc_info=True)
+        return False, f"Validation error: {str(e)}"
+
+# New guardrail function for Taskmaster output from tasks.yaml
+def validate_taskmaster_yaml_output(task_output: TaskOutput) -> tuple[bool, Any]:
+    if not hasattr(task_output, 'raw') or not isinstance(task_output.raw, str):
+        return False, "Guardrail input (task_output.raw) must be a string and present."
+    output_str = task_output.raw.strip()
+    match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", output_str, re.DOTALL | re.IGNORECASE)
+    if match:
+        json_str = match.group(1)
+    else:
+        first_brace = output_str.find('{')
+        last_brace = output_str.rfind('}')
+        if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+            json_str = output_str[first_brace:last_brace+1]
+        else:
+            json_str = output_str
+    try:
+        logging.info(f"Guardrail (YAML): Attempting to parse as JSON: '{json_str}'")
+        data = json.loads(json_str)
+        if not isinstance(data, dict):
+            logging.warning(f"Parsed data is not a dictionary. Raw (cleaned) string was: {json_str}")
+            return False, "Output must be a JSON dictionary."
+
+        required_keys = ["project_name", "refined_brief"] # Keys from tasks.yaml's first task
+        for key in required_keys:
+            if key not in data:
+                logging.warning(f"Missing key '{key}' in parsed JSON from YAML task. Raw (cleaned) string was: {json_str}")
+                return False, f"Missing key in output: {key}"
+        if not isinstance(data["project_name"], str) or not data["project_name"].strip():
+            logging.warning(f"Validation failed for 'project_name' (YAML task). Raw (cleaned) string was: {json_str}")
+            return False, "project_name must be a non-empty string."
+        if not isinstance(data["refined_brief"], str) or not data["refined_brief"].strip():
+            logging.warning(f"Validation failed for 'refined_brief' (YAML task). Raw (cleaned) string was: {json_str}")
+            return False, "refined_brief must be a non-empty string."
+
+        # Add default values for keys expected by downstream orchestrator logic,
+        # as these are not produced by the simpler YAML task.
+        data.setdefault("is_new_project", True) # Assume new for now
+        data.setdefault("recommended_next_stage", "architecture") # Default next stage
+        data.setdefault("project_scope", "unknown") # Default scope
 
         return True, data
     except json.JSONDecodeError as e:
-        # The existing logging.error here is good as it includes the json_str that failed.
-        logging.error(f"Guardrail: Failed to decode JSON. Error: {e}. Raw (cleaned) string was: '{json_str}'. Original output_str was: '{output_str}'")
+        logging.error(f"Guardrail (YAML): Failed to decode JSON. Error: {e}. Raw string was: '{json_str}'. Original: '{output_str}'")
         return False, "Output must be valid JSON."
     except Exception as e:
-        logging.error(f"Validation error during taskmaster output validation: {str(e)}. Raw (cleaned) string was: {json_str}. Original output_str was: {output_str}", exc_info=True)
+        logging.error(f"Validation error (YAML): {str(e)}. Raw string was: '{json_str}'. Original: '{output_str}'", exc_info=True)
         return False, f"Validation error: {str(e)}"
 
 class WorkflowOrchestrator:
@@ -211,119 +233,159 @@ class WorkflowOrchestrator:
 
     def run_taskmaster_workflow(self, inputs: dict):
         logging.info("Executing Taskmaster workflow...")
-        from ..taskmaster.taskmaster_agent import taskmaster_agent # Corrected import path
+        from ..taskmaster.taskmaster_agent import taskmaster_agent
         user_request = inputs.get("user_request", "")
         if not user_request:
             logging.error("No user_request provided to Taskmaster workflow.")
             return {
                 "project_name": "error_no_user_request",
                 "refined_brief": "Taskmaster failed: No user request was provided.",
-                "is_new_project": False,
+                # Default values for fields previously expected from hardcoded task
+                "is_new_project": True,
                 "recommended_next_stage": "architecture",
                 "project_scope": "unknown",
                 "taskmaster_error": "No user_request provided"
             }
 
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            tasks_file_path = os.path.join(current_dir, "..", "taskmaster", "tasks.yaml")
+            with open(tasks_file_path, 'r') as f:
+                all_taskmaster_tasks_data = yaml.safe_load(f)
+
+            if not all_taskmaster_tasks_data or 'tasks' not in all_taskmaster_tasks_data or not all_taskmaster_tasks_data['tasks']:
+                logging.error("Failed to load tasks from taskmaster/tasks.yaml or no tasks found.")
+                return {
+                    "project_name": "error_task_def_load_failed",
+                    "refined_brief": "Taskmaster failed: Could not load task definitions.",
+                    "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
+                    "taskmaster_error": "Failed to load task definitions from YAML."
+                }
+
+            task_data = all_taskmaster_tasks_data['tasks'][0] # Use the first task
+
+            # Prepare context for formatting, ensuring all potential keys are present
+            formatting_context = {
+                "user_request": user_request,
+                "project_goal_statement": inputs.get("project_goal_statement", ""), # Default if not provided
+                "priority_level": inputs.get("priority_level", "Normal") # Default if not provided
+                # Add other placeholders from the YAML task description here if any
+            }
+            try:
+                task_description = task_data['description'].format(**formatting_context)
+            except KeyError as ke:
+                logging.error(f"Missing key '{ke}' in formatting_context for Taskmaster task description. Provided: {formatting_context.keys()}")
+                return {
+                    "project_name": "error_task_desc_format_failed",
+                    "refined_brief": f"Taskmaster failed: Missing data for task description placeholder '{ke}'.",
+                    "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
+                    "taskmaster_error": f"Task description formatting error: missing '{ke}'."
+                }
+
+            task_expected_output = task_data['expected_output']
+
+        except FileNotFoundError:
+            logging.error(f"Taskmaster tasks.yaml not found at expected path: {tasks_file_path}")
+            return {
+                "project_name": "error_task_def_not_found",
+                "refined_brief": "Taskmaster failed: Task definition file not found.",
+                "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
+                "taskmaster_error": "Task definition file (tasks.yaml) not found."
+            }
+        except Exception as e:
+            logging.error(f"Error loading or processing Taskmaster tasks.yaml: {e}", exc_info=True)
+            return {
+                "project_name": "error_task_def_processing_failed",
+                "refined_brief": f"Taskmaster failed: Error processing task definitions - {e}.",
+                "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
+                "taskmaster_error": f"Error loading or processing tasks.yaml: {e}"
+            }
+
         taskmaster_task = Task(
-            description=f"Process the user request: '{user_request}'. Your primary goal is to determine if this is a new or existing project and then to define its initial parameters. "
-                        f"Follow these steps and structure your FINAL JSON output accordingly using the specified keys: "
-                        f"1. Analyze the request to understand its core needs and deliverables. "
-                        f"2. To check for existing relevant projects or context: "
-                        f"   - Prioritize using any available RAG search tools (e.g., for web components or other knowledge bases you have access to) for contextual information. "
-                        f"   - To determine if a specific project *directory* already exists by name: "
-                        f"     - Consider using the 'List files in directory' tool (DirectoryReadTool) on the 'mycrews/qrew/projects/' directory. Examining the output can tell you if a subdirectory with a potential project name exists. "
-                        f"     - Alternatively, if you have a specific potential project name, you could try to read a known file from its expected directory (e.g., 'mycrews/qrew/projects/PROJECT_NAME/state.json') using the 'Read a file's content' tool (FileReadTool). If it fails, the project might not exist. "
-                        f"   - If you still choose to use the 'Search a directory's content' tool (DirectorySearchTool) for a deeper semantic search for related content within 'mycrews/qrew/projects/', be aware it has previously caused errors. Use it cautiously and ensure your query is specific. "
-                        f"3. Based on your findings, determine if the request pertains to a new or existing project. "
-                        f"4. If it's a new project, generate a unique and descriptive project name (e.g., based on key themes from the request, ensuring it's filesystem-safe). "
-                        f"5. Create a refined project brief. "
-                        f"6. Recommend the next logical stage: 'tech_vetting' (if new/complex tech evaluation is needed) or 'architecture' (if project can proceed to design). "
-                        f"7. Determine the project scope from: 'web-only', 'mobile-only', 'backend-only', 'full-stack', 'documentation-only'. If ambiguous, use 'unknown'. "
-                        "IMPORTANT: After gathering any necessary information using tools and forming your conclusions, your *actual final output for this task* MUST be ONLY the single, valid JSON object as specified in the `expected_output`. Do not output any of the tool results, intermediate thoughts, or any other text or conversational remarks directly as your final response. The JSON object is your sole deliverable for this task.",
+            description=task_description,
             agent=taskmaster_agent,
-            expected_output='A single, valid JSON object. Example: {"project_name": "example_project_name", "refined_brief": "A concise summary of the project...", "is_new_project": true, "recommended_next_stage": "architecture", "project_scope": "web-only"}',
-            guardrail=validate_taskmaster_output,
+            expected_output=task_expected_output, # Expected output from YAML
+            guardrail=validate_taskmaster_yaml_output, # Use the new guardrail
             max_retries=1
         )
 
         task_crew = Crew(
             agents=[taskmaster_agent],
             tasks=[taskmaster_task],
-            verbose=True # Keep verbose for development/debugging, can be False in production
+            verbose=True
         )
-        logging.info(f"Kicking off Taskmaster crew for request: '{user_request[:100]}...'")
+        logging.info(f"Kicking off Taskmaster crew with YAML-defined task for request: '{user_request[:100]}...'")
         try:
             crew_kickoff_result = task_crew.kickoff()
         except Exception as e:
             logging.error(f"Taskmaster crew kickoff failed: {e}", exc_info=True)
-            # This exception could be due to guardrail failure after retries, or other issues.
             return {
                 "project_name": "error_taskmaster_kickoff_exception",
                 "refined_brief": f"Taskmaster crew kickoff failed with exception: {e}",
-                "is_new_project": False,
-                "recommended_next_stage": "architecture",
-                "project_scope": "unknown",
+                "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
                 "taskmaster_error": f"Kickoff exception: {e}"
             }
-
 
         if not (hasattr(taskmaster_task, 'output') and taskmaster_task.output is not None):
             logging.error("Taskmaster task completed kickoff but task.output is missing or None.")
             return {
                 "project_name": "error_task_no_output_attr",
                 "refined_brief": "Taskmaster task completed kickoff but its .output attribute was not set.",
-                "is_new_project": False,
-                "recommended_next_stage": "architecture",
-                "project_scope": "unknown",
+                "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
                 "taskmaster_error": "Task .output attribute missing after kickoff"
             }
 
         final_json_string = None
-        if isinstance(taskmaster_task.output, str):
+        # The guardrail (validate_taskmaster_yaml_output) now returns the parsed dict directly if successful
+        # So, taskmaster_task.output should be the dict.
+        if isinstance(taskmaster_task.output, dict):
+            # The guardrail already added default values for downstream compatibility
+            logging.info(f"Taskmaster workflow successful. Parsed output (from dict): {taskmaster_task.output}")
+            return taskmaster_task.output # This is the dictionary from the guardrail
+        elif isinstance(taskmaster_task.output, str): # Fallback if guardrail somehow returned string
             final_json_string = taskmaster_task.output
-            logging.info("Taskmaster task.output is a string.")
-        elif hasattr(taskmaster_task.output, 'raw') and isinstance(taskmaster_task.output.raw, str):
+            logging.info("Taskmaster task.output is a string. Attempting parse (should have been dict).")
+        elif hasattr(taskmaster_task.output, 'raw') and isinstance(taskmaster_task.output.raw, str): # Legacy check
             final_json_string = taskmaster_task.output.raw
-            logging.info("Taskmaster task.output is a TaskOutput object, using its .raw attribute.")
-        elif hasattr(taskmaster_task.output, 'exported_output') and isinstance(taskmaster_task.output.exported_output, str):
-            final_json_string = taskmaster_task.output.exported_output
-            logging.info("Taskmaster task.output is a TaskOutput object, using its .exported_output attribute.")
+            logging.info("Taskmaster task.output is a TaskOutput object, using its .raw attribute (should have been dict).")
+        # ... other checks for exported_output can be removed if guardrail guarantees dict ...
         else:
             actual_output_type = type(taskmaster_task.output).__name__
             logging.error(f"Taskmaster task.output is of unexpected type: {actual_output_type}. Value: '{str(taskmaster_task.output)}'")
             return {
                 "project_name": "error_task_output_unexpected_structure",
-                "refined_brief": f"Taskmaster task.output was of an unexpected type or structure: {actual_output_type}. Value: '{str(taskmaster_task.output)}'",
-                "is_new_project": False,
-                "recommended_next_stage": "architecture",
-                "project_scope": "unknown",
+                "refined_brief": f"Taskmaster task.output was of an unexpected type: {actual_output_type}. Expected dict. Value: '{str(taskmaster_task.output)}'",
+                "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
                 "taskmaster_error": f"Task output unexpected structure: {actual_output_type}"
             }
 
+        # This block is now mainly a fallback if task.output wasn't a dict as expected from the new guardrail
         if final_json_string:
             try:
+                # Attempt to parse, though validate_taskmaster_yaml_output should have done this.
+                # This path indicates the guardrail might not have returned a dict.
                 parsed_data = json.loads(final_json_string)
-                logging.info(f"Taskmaster workflow successful. Parsed output: {parsed_data}")
+                # Manually add defaults if we reached here (meaning guardrail didn't return dict)
+                parsed_data.setdefault("is_new_project", True)
+                parsed_data.setdefault("recommended_next_stage", "architecture")
+                parsed_data.setdefault("project_scope", "unknown")
+                logging.info(f"Taskmaster workflow successful (parsed from string fallback). Output: {parsed_data}")
                 return parsed_data
             except json.JSONDecodeError as e:
-                logging.error(f"Taskmaster: Failed to parse JSON from task.output's string content, even after guardrail. Error: {e}. String was: '{final_json_string}'", exc_info=True)
+                logging.error(f"Taskmaster: Failed to parse JSON from task.output's string content. Error: {e}. String was: '{final_json_string}'", exc_info=True)
                 return {
                     "project_name": "error_final_json_parse_failed",
-                    "refined_brief": f"Taskmaster: Post-guardrail JSON parsing failed. String: '{final_json_string}'. Error: {e}",
-                    "is_new_project": False,
-                    "recommended_next_stage": "architecture",
-                    "project_scope": "unknown",
-                    "taskmaster_error": "Final JSON parsing failed after guardrail"
+                    "refined_brief": f"Taskmaster: JSON parsing failed. String: '{final_json_string}'. Error: {e}",
+                    "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
+                    "taskmaster_error": "Final JSON parsing failed"
                 }
-        else:
-            logging.error(f"Taskmaster: Could not extract a final JSON string from task.output. Type was {type(taskmaster_task.output).__name__}.")
+        else: # Should not be reached if output is not None and guardrail works
+            logging.error(f"Taskmaster: Could not extract or parse output. Type was {type(taskmaster_task.output).__name__}.")
             return {
-                "project_name": "error_no_final_json_string",
-                "refined_brief": "Taskmaster: Could not extract final JSON string from task output.",
-                "is_new_project": False,
-                "recommended_next_stage": "architecture",
-                "project_scope": "unknown",
-                "taskmaster_error": "No final JSON string extracted"
+                "project_name": "error_no_final_output_dict",
+                "refined_brief": "Taskmaster: Could not extract final dictionary from task output.",
+                "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
+                "taskmaster_error": "No final output dictionary"
             }
 
     def execute_pipeline(self, initial_inputs: dict, mock_taskmaster_output: Optional[dict] = None):
