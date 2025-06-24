@@ -25,6 +25,7 @@ from crewai_tools import (
 )
 from crewai_tools import GithubSearchTool as OriginalCrewAIGithubSearchTool # Import the original
 from .github_tool_wrapper import GithubSearchWrapperTool # Import our new wrapper tool class
+from .custom_rag_tools import CustomWebComponentsRagTool # Import the custom RAG tool
 import os # Ensure os is imported
 import chromadb # Added chromadb import
 # from chromadb.utils.embedding_functions import OnnxEmbeddingFunction # Removed
@@ -362,49 +363,48 @@ def configure_rag_tools(knowledge_bases: dict):
                         print(f"DEBUG_RAG_SETUP: Source path {path_or_config} is not a directory or not supported for auto-loading.")
                     # === END NEW/REVISED SECTION ===
 
-                    # Attempt to configure RagTool to return source documents
-                    # This is speculative, assuming 'config' and 'return_source_documents' might be supported
-                    # or passed to an underlying LangChain-style retriever.
-                    rag_tool_config = {"return_source_documents": True}
-                    current_tool_instance = RagTool(
-                        name=tool_name,
-                        description=tool_description,
-                        vector_store=chroma_collection,
-                        llm=default_llm, # Keep passing the LLM, it might be needed for embeddings or if config fails
-                        config=rag_tool_config
-                    )
-                    print(f"Initialized RAG tool for '{name}' with ChromaDB, default_llm, and config: {rag_tool_config}.")
+                    # If it's the 'web_components' RAG tool, use our custom tool
+                    if name == "web_components":
+                        if not default_llm:
+                             logger.warning(f"CRITICAL: default_llm is None. CustomWebComponentsRagTool for '{name}' will lack an LLM for synthesis.")
+                        current_tool_instance = CustomWebComponentsRagTool(
+                            chroma_client=chroma_client,
+                            embedding_function=onnx_embedder_for_rag, # This is the ONNXEmbedder instance
+                            llm=default_llm, # Pass the configured default LLM
+                            collection_name=collection_name
+                            # Name and description are set in the CustomWebComponentsRagTool class
+                        )
+                        print(f"Initialized CUSTOM RAG tool for '{name}' using ChromaDB collection '{collection_name}', ONNXEmbedder, and default_llm.")
+                    else:
+                        # For other RAG tools, use the standard crewai_tools.RagTool
+                        # (and keep the speculative config attempt for them, or remove if proven ineffective)
+                        rag_tool_config = {"return_source_documents": True}
+                        try:
+                            current_tool_instance = RagTool(
+                                name=tool_name,
+                                description=tool_description,
+                                vector_store=chroma_collection,
+                                llm=default_llm,
+                                config=rag_tool_config
+                            )
+                            print(f"Initialized standard RagTool for '{name}' with ChromaDB, default_llm, and config: {rag_tool_config}.")
+                        except TypeError:
+                            current_tool_instance = RagTool(
+                                name=tool_name,
+                                description=tool_description,
+                                vector_store=chroma_collection,
+                                llm=default_llm
+                            )
+                            print(f"Initialized standard RagTool for '{name}' with ChromaDB and default_llm (config param failed).")
 
-                except TypeError as te: # Catch if RagTool constructor doesn't accept 'config'
-                    print(f"Warning: RagTool for '{name}' does not accept 'config' parameter ({te}). Initializing without it, but with LLM.")
-                    current_tool_instance = RagTool(
-                        name=tool_name,
-                        description=tool_description,
-                        vector_store=chroma_collection,
-                        llm=default_llm
-                    )
-                    print(f"Initialized RAG tool for '{name}' with ChromaDB and default_llm (config param failed).")
                 except Exception as e_rag_setup:
-                    print(f"Warning: Failed to initialize RagTool for '{name}' with specific config/LLM: {e_rag_setup}.")
-                    # Fallback to simpler instantiation if the configured one fails
-                    current_tool_instance = RagTool(source=path_or_config, name=tool_name, description=tool_description)
-                    print(f"Initialized RAG tool for '{name}' with source '{path_or_config}' (ChromaDB/LLM/config setup failed).")
+                    print(f"Warning: Failed to initialize RAG tool for '{name}' with ChromaDB/LLM: {e_rag_setup}.")
+                    current_tool_instance = RagTool(source=path_or_config, name=tool_name, description=tool_description) # Basic fallback
+                    print(f"Initialized standard RagTool for '{name}' with source '{path_or_config}' (ChromaDB/LLM setup failed).")
 
-            else: # Fallback if chroma_client or onnx_embedder_for_rag is not available/ready
-                # Try with config here too, in case source-based RAG supports it
-                rag_tool_config = {"return_source_documents": True}
-                try:
-                    current_tool_instance = RagTool(source=path_or_config, name=tool_name, description=tool_description, llm=default_llm if default_llm else None, config=rag_tool_config)
-                except TypeError: # If config not accepted by source-based RagTool
-                     current_tool_instance = RagTool(source=path_or_config, name=tool_name, description=tool_description, llm=default_llm if default_llm else None)
-
-                if not chroma_client:
-                    print(f"Initialized RAG tool for '{name}' (Chroma client not available, using source, default_llm if available, and speculative config).")
-                if not (onnx_embedder_for_rag and onnx_embedder_for_rag.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY): # type: ignore
-                    print(f"Initialized RAG tool for '{name}' (Project's ONNXEmbedder not available/ready, using source, default_llm if available, and speculative config).")
-                if not default_llm:
-                    print(f"Warning: RAG tool for '{name}' initialized with source but default_llm is also None.")
-
+            else: # Fallback if chroma_client or onnx_embedder_for_rag is not available/ready for any RAG tool
+                current_tool_instance = RagTool(source=path_or_config, name=tool_name, description=tool_description, llm=default_llm if default_llm else None)
+                logger.warning(f"RAG tool for '{name}' falling back to source-based due to missing chroma/embedder. LLM availability: {'present' if default_llm else 'None'}")
 
             if current_tool_instance:
                 _configured_rag_tools[name] = current_tool_instance
