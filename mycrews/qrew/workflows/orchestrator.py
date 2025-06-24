@@ -385,30 +385,36 @@ class WorkflowOrchestrator:
                 "taskmaster_error": "Task .output attribute missing after kickoff"
             }
 
-        # After guardrail execution, taskmaster_task.output should be the processed dictionary.
-        if isinstance(taskmaster_task.output, dict):
-            # The guardrail (validate_taskmaster_yaml_output) should have added default values
-            # for downstream compatibility (is_new_project, recommended_next_stage, project_scope).
-            logging.info(f"Taskmaster workflow successful. Output from guardrail: {taskmaster_task.output}")
-            return taskmaster_task.output
+        # After guardrail execution, task.output is a TaskOutput object.
+        # If the guardrail was successful and returned (True, data),
+        # then task.output.exported_output should hold 'data'.
+        if taskmaster_task.output and taskmaster_task.output.success:
+            if isinstance(taskmaster_task.output.exported_output, dict):
+                # The guardrail (validate_taskmaster_yaml_output) has processed it.
+                # This dictionary will only contain project_name and refined_brief.
+                logging.info(f"Taskmaster workflow successful. Output from guardrail (exported_output): {taskmaster_task.output.exported_output}")
+                return taskmaster_task.output.exported_output
+            else:
+                logging.error(f"Taskmaster task.output.success was True, but task.output.exported_output was not a dict. Type: {type(taskmaster_task.output.exported_output).__name__}. Value: {taskmaster_task.output.exported_output}")
+                return {
+                    "project_name": "error_exported_output_not_dict",
+                    "refined_brief": "Taskmaster: Guardrail indicated success, but exported_output was not a dictionary.",
+                    "taskmaster_error": "Guardrail success but exported_output not dict."
+                }
         else:
-            # This case means the guardrail failed or did not return a dict,
-            # or the task output was not set as expected.
-            # This also covers if taskmaster_task.output was None from the start.
-            raw_output_str = ""
-            if hasattr(taskmaster_task.output, 'raw') and isinstance(taskmaster_task.output.raw, str):
-                raw_output_str = taskmaster_task.output.raw
-            elif isinstance(taskmaster_task.output, str):
-                raw_output_str = taskmaster_task.output
+            # Guardrail failed, or task execution failed before guardrail, or output is None.
+            error_message = "Taskmaster: Execution failed or guardrail reported failure."
+            raw_output_detail = ""
+            if taskmaster_task.output:
+                error_message = getattr(taskmaster_task.output, 'error', error_message) # Get specific error from guardrail if available
+                if hasattr(taskmaster_task.output, 'raw') and isinstance(taskmaster_task.output.raw, str):
+                    raw_output_detail = taskmaster_task.output.raw
 
-            logging.error(f"Taskmaster task output was not a dictionary after guardrail processing. Type: {type(taskmaster_task.output).__name__}. Raw string (if available): '{raw_output_str}'")
+            logging.error(f"{error_message} Raw output (if any): '{raw_output_detail}'")
             return {
-                "project_name": "error_guardrail_did_not_return_dict",
-                "refined_brief": "Taskmaster: Guardrail processing did not result in a dictionary output.",
-                "is_new_project": True,
-                "recommended_next_stage": "architecture", # Default fallback
-                "project_scope": "unknown", # Default fallback
-                "taskmaster_error": "Guardrail did not return dictionary or task output was unexpected."
+                "project_name": "error_taskmaster_failed_or_guardrail_false",
+                "refined_brief": error_message,
+                "taskmaster_error": error_message
             }
 
     def execute_pipeline(self, initial_inputs: dict, mock_taskmaster_output: Optional[dict] = None):
