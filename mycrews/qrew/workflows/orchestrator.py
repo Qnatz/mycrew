@@ -72,7 +72,7 @@ def validate_taskmaster_yaml_output(task_output: TaskOutput) -> tuple[bool, Any]
         if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
             json_str = output_str[first_brace:last_brace+1]
         else:
-            json_str = output_str
+            json_str = output_str # Attempt to parse the whole string if no clear JSON found
     try:
         logging.info(f"Guardrail (YAML): Attempting to parse as JSON: '{json_str}'")
         data = json.loads(json_str)
@@ -92,12 +92,8 @@ def validate_taskmaster_yaml_output(task_output: TaskOutput) -> tuple[bool, Any]
             logging.warning(f"Validation failed for 'refined_brief' (YAML task). Raw (cleaned) string was: {json_str}")
             return False, "refined_brief must be a non-empty string."
 
-        # Add default values for keys expected by downstream orchestrator logic,
-        # as these are not produced by the simpler YAML task.
-        data.setdefault("is_new_project", True) # Assume new for now
-        data.setdefault("recommended_next_stage", "architecture") # Default next stage
-        data.setdefault("project_scope", "unknown") # Default scope
-
+        # DO NOT ADD DEFAULT VALUES FOR is_new_project, recommended_next_stage, project_scope HERE.
+        # The orchestrator will handle determining these.
         return True, data
     except json.JSONDecodeError as e:
         logging.error(f"Guardrail (YAML): Failed to decode JSON. Error: {e}. Raw string was: '{json_str}'. Original: '{output_str}'")
@@ -389,57 +385,30 @@ class WorkflowOrchestrator:
                 "taskmaster_error": "Task .output attribute missing after kickoff"
             }
 
-        final_json_string = None
-        # The guardrail (validate_taskmaster_yaml_output) now returns the parsed dict directly if successful
-        # So, taskmaster_task.output should be the dict.
+        # After guardrail execution, taskmaster_task.output should be the processed dictionary.
         if isinstance(taskmaster_task.output, dict):
-            # The guardrail already added default values for downstream compatibility
-            logging.info(f"Taskmaster workflow successful. Parsed output (from dict): {taskmaster_task.output}")
-            return taskmaster_task.output # This is the dictionary from the guardrail
-        elif isinstance(taskmaster_task.output, str): # Fallback if guardrail somehow returned string
-            final_json_string = taskmaster_task.output
-            logging.info("Taskmaster task.output is a string. Attempting parse (should have been dict).")
-        elif hasattr(taskmaster_task.output, 'raw') and isinstance(taskmaster_task.output.raw, str): # Legacy check
-            final_json_string = taskmaster_task.output.raw
-            logging.info("Taskmaster task.output is a TaskOutput object, using its .raw attribute (should have been dict).")
-        # ... other checks for exported_output can be removed if guardrail guarantees dict ...
+            # The guardrail (validate_taskmaster_yaml_output) should have added default values
+            # for downstream compatibility (is_new_project, recommended_next_stage, project_scope).
+            logging.info(f"Taskmaster workflow successful. Output from guardrail: {taskmaster_task.output}")
+            return taskmaster_task.output
         else:
-            actual_output_type = type(taskmaster_task.output).__name__
-            logging.error(f"Taskmaster task.output is of unexpected type: {actual_output_type}. Value: '{str(taskmaster_task.output)}'")
-            return {
-                "project_name": "error_task_output_unexpected_structure",
-                "refined_brief": f"Taskmaster task.output was of an unexpected type: {actual_output_type}. Expected dict. Value: '{str(taskmaster_task.output)}'",
-                "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
-                "taskmaster_error": f"Task output unexpected structure: {actual_output_type}"
-            }
+            # This case means the guardrail failed or did not return a dict,
+            # or the task output was not set as expected.
+            # This also covers if taskmaster_task.output was None from the start.
+            raw_output_str = ""
+            if hasattr(taskmaster_task.output, 'raw') and isinstance(taskmaster_task.output.raw, str):
+                raw_output_str = taskmaster_task.output.raw
+            elif isinstance(taskmaster_task.output, str):
+                raw_output_str = taskmaster_task.output
 
-        # This block is now mainly a fallback if task.output wasn't a dict as expected from the new guardrail
-        if final_json_string:
-            try:
-                # Attempt to parse, though validate_taskmaster_yaml_output should have done this.
-                # This path indicates the guardrail might not have returned a dict.
-                parsed_data = json.loads(final_json_string)
-                # Manually add defaults if we reached here (meaning guardrail didn't return dict)
-                parsed_data.setdefault("is_new_project", True)
-                parsed_data.setdefault("recommended_next_stage", "architecture")
-                parsed_data.setdefault("project_scope", "unknown")
-                logging.info(f"Taskmaster workflow successful (parsed from string fallback). Output: {parsed_data}")
-                return parsed_data
-            except json.JSONDecodeError as e:
-                logging.error(f"Taskmaster: Failed to parse JSON from task.output's string content. Error: {e}. String was: '{final_json_string}'", exc_info=True)
-                return {
-                    "project_name": "error_final_json_parse_failed",
-                    "refined_brief": f"Taskmaster: JSON parsing failed. String: '{final_json_string}'. Error: {e}",
-                    "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
-                    "taskmaster_error": "Final JSON parsing failed"
-                }
-        else: # Should not be reached if output is not None and guardrail works
-            logging.error(f"Taskmaster: Could not extract or parse output. Type was {type(taskmaster_task.output).__name__}.")
+            logging.error(f"Taskmaster task output was not a dictionary after guardrail processing. Type: {type(taskmaster_task.output).__name__}. Raw string (if available): '{raw_output_str}'")
             return {
-                "project_name": "error_no_final_output_dict",
-                "refined_brief": "Taskmaster: Could not extract final dictionary from task output.",
-                "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
-                "taskmaster_error": "No final output dictionary"
+                "project_name": "error_guardrail_did_not_return_dict",
+                "refined_brief": "Taskmaster: Guardrail processing did not result in a dictionary output.",
+                "is_new_project": True,
+                "recommended_next_stage": "architecture", # Default fallback
+                "project_scope": "unknown", # Default fallback
+                "taskmaster_error": "Guardrail did not return dictionary or task output was unexpected."
             }
 
     def execute_pipeline(self, initial_inputs: dict, mock_taskmaster_output: Optional[dict] = None):
@@ -463,63 +432,98 @@ class WorkflowOrchestrator:
 
         if mock_taskmaster_output and self.state is None:
             logging.debug("Using MOCKED Taskmaster output.")
-            taskmaster_output = mock_taskmaster_output
-            current_artifacts["taskmaster"] = taskmaster_output
-            actual_project_name = taskmaster_output.get("project_name")
-            if not actual_project_name or not isinstance(actual_project_name, str):
-                logging.error("Mocked Taskmaster output missing or invalid 'project_name'. Cannot proceed.")
-                return {"error": "Mocked Taskmaster output missing or invalid project_name"}
+            taskmaster_output_from_mock = mock_taskmaster_output
+
+            actual_project_name = taskmaster_output_from_mock.get("project_name")
+            if not actual_project_name:
+                logging.error("Mocked Taskmaster output missing 'project_name'. Cannot proceed.")
+                return {"error": "Mocked Taskmaster output missing project_name"}
+
+            is_truly_new_project_mock = taskmaster_output_from_mock.get("is_new_project", True)
+            recommended_next_stage_mock = taskmaster_output_from_mock.get("recommended_next_stage", "architecture")
+            project_scope_mock = taskmaster_output_from_mock.get("project_scope", "unknown")
+
             self.state = ProjectStateManager(actual_project_name)
+            self.state.set_project_info("refined_brief", taskmaster_output_from_mock.get("refined_brief"))
+            self.state.set_project_info("is_new_project", is_truly_new_project_mock)
+            self.state.set_project_info("recommended_next_stage", recommended_next_stage_mock)
+            self.state.set_project_info("project_scope", project_scope_mock)
+
+            current_artifacts["taskmaster"] = {
+                "project_name": actual_project_name,
+                "refined_brief": taskmaster_output_from_mock.get("refined_brief"),
+                "is_new_project": is_truly_new_project_mock,
+                "recommended_next_stage": recommended_next_stage_mock,
+                "project_scope": project_scope_mock
+            }
             self.state.start_stage("taskmaster")
-            self.state.complete_stage("taskmaster", artifacts=taskmaster_output)
+            self.state.complete_stage("taskmaster", artifacts=current_artifacts["taskmaster"])
             initial_inputs["project_name"] = actual_project_name
-            recommended_next = taskmaster_output.get("recommended_next_stage", "architecture")
+
             stages_to_run.append("taskmaster")
-            if recommended_next == "tech_vetting":
+            if recommended_next_stage_mock == "tech_vetting":
               stages_to_run.extend(["tech_vetting", "architecture", "crew_assignment", "subagent_execution", "final_assembly", "persist_generated_code"])
-            elif recommended_next == "architecture":
+            elif recommended_next_stage_mock == "architecture":
               stages_to_run.extend(["architecture", "crew_assignment", "subagent_execution", "final_assembly", "persist_generated_code"])
             else:
-              logging.warning(f"Unknown recommended next stage '{recommended_next}' in mock. Defaulting to architecture flow.")
+              logging.warning(f"Unknown recommended_next_stage '{recommended_next_stage_mock}' in mock. Defaulting to architecture flow.")
               stages_to_run.extend(["architecture", "crew_assignment", "subagent_execution", "final_assembly", "persist_generated_code"])
             next_stage_index = 0
-        elif self.state is None:
-            logging.info("Orchestrator state not initialized, running actual Taskmaster workflow...")
-            taskmaster_output = self.run_taskmaster_workflow(initial_inputs)
-            current_artifacts["taskmaster"] = taskmaster_output
 
-            if "taskmaster_error" in taskmaster_output or "error_" in taskmaster_output.get("project_name", ""):
-                logging.error(f"Taskmaster failed. Output: {taskmaster_output}")
-                error_project_name = taskmaster_output.get("project_name", "taskmaster_failed_project")
-                if "error_" in error_project_name: error_project_name = "taskmaster_failed_project"
+        elif self.state is None: # New project flow
+            logging.info("Orchestrator: New project flow. Running Taskmaster workflow...")
+            taskmaster_output_raw = self.run_taskmaster_workflow(initial_inputs) # This now returns dict with project_name, refined_brief
+
+            if "taskmaster_error" in taskmaster_output_raw or not taskmaster_output_raw.get("project_name"):
+                logging.error(f"Taskmaster failed. Output: {taskmaster_output_raw}")
+                error_project_name = taskmaster_output_raw.get("project_name", "taskmaster_failed_project")
+                if "error_" in error_project_name or not error_project_name.replace("_", "").isalnum():
+                     error_project_name = "taskmaster_failed_unnamed"
+
                 self.state = ProjectStateManager(error_project_name)
-                self.state.fail_stage("taskmaster", taskmaster_output.get("refined_brief", "Taskmaster critical failure"))
-                # No further stages will run. Report will be generated at the end.
-                stages_to_run = [] # Empty list, skip loop
+                self.state.fail_stage("taskmaster", taskmaster_output_raw.get("refined_brief", "Taskmaster critical failure"))
+                stages_to_run = [] # Stop pipeline
             else:
-                actual_project_name = taskmaster_output.get("project_name")
-                print(f"Taskmaster determined project name: {actual_project_name}")
+                actual_project_name = taskmaster_output_raw.get("project_name")
+                logging.info(f"Taskmaster returned project name: {actual_project_name}")
+
+                temp_checker_psm = ProjectStateManager(project_name=actual_project_name, load_existing=True)
+                is_truly_new_project = not temp_checker_psm.project_exists()
+                del temp_checker_psm
+
                 self.state = ProjectStateManager(actual_project_name)
+
+                self.state.set_project_info("refined_brief", taskmaster_output_raw.get("refined_brief"))
+                self.state.set_project_info("is_new_project", is_truly_new_project)
+
+                recommended_next_stage = "architecture"
+                project_scope = "unknown"
+
+                self.state.set_project_info("recommended_next_stage", recommended_next_stage)
+                self.state.set_project_info("project_scope", project_scope)
+
+                logging.info(f"Project '{actual_project_name}' is_new_project: {is_truly_new_project}. Defaulted next_stage: '{recommended_next_stage}', scope: '{project_scope}'.")
+
+                current_artifacts["taskmaster"] = {
+                    "project_name": actual_project_name,
+                    "refined_brief": taskmaster_output_raw.get("refined_brief"),
+                    "is_new_project": is_truly_new_project,
+                    "recommended_next_stage": recommended_next_stage,
+                    "project_scope": project_scope
+                }
                 self.state.start_stage("taskmaster")
-                self.state.complete_stage("taskmaster", artifacts=taskmaster_output)
-                initial_inputs["project_name"] = actual_project_name # Update for subsequent stages
+                self.state.complete_stage("taskmaster", artifacts=current_artifacts["taskmaster"])
+                initial_inputs["project_name"] = actual_project_name
 
-                # Determine the actual sequence of stages based on Taskmaster's recommendation
-                recommended_next = taskmaster_output.get("recommended_next_stage", "architecture")
-                print(f"Taskmaster recommended next stage: {recommended_next}")
-
-                stages_to_run.append("taskmaster") # Already effectively done for new projects
-                if recommended_next == "tech_vetting":
-                    stages_to_run.extend(["tech_vetting", "architecture", "crew_assignment", "subagent_execution", "final_assembly"])
-                elif recommended_next == "architecture":
-                    stages_to_run.extend(["architecture", "crew_assignment", "subagent_execution", "final_assembly"])
-                else: # Default to architecture if recommendation is unclear
-                    print(f"Warning: Unknown recommended next stage '{recommended_next}'. Defaulting to architecture flow.")
-                    stages_to_run.extend(["architecture", "crew_assignment", "subagent_execution", "final_assembly"])
-
-                # Since taskmaster is "done" by this block, the loop should start from the next stage.
-                # We mark taskmaster as completed, and the loop will skip it.
-                next_stage_index = 0 # The loop will check is_completed for taskmaster
+                stages_to_run.append("taskmaster")
+                if recommended_next_stage == "tech_vetting":
+                    stages_to_run.extend(["tech_vetting", "architecture", "crew_assignment", "subagent_execution", "final_assembly", "persist_generated_code"])
+                elif recommended_next_stage == "architecture":
+                    stages_to_run.extend(["architecture", "crew_assignment", "subagent_execution", "final_assembly", "persist_generated_code"])
+                else:
+                    logging.warning(f"Unknown recommended_next_stage '{recommended_next_stage}'. Defaulting to architecture flow.")
+                    stages_to_run.extend(["architecture", "crew_assignment", "subagent_execution", "final_assembly", "persist_generated_code"])
+                next_stage_index = 0
 
         else: # Resuming an existing project
             if "project_name" not in initial_inputs and hasattr(self.state, 'project_info'):
