@@ -10,15 +10,19 @@ specific_llm = get_llm_for_agent(agent_identifier)
 
 devops_and_integration_coordinator_agent = Agent(
     role="DevOps and Integration Coordinator",
-    goal="Streamline and manage DevOps processes, including CI/CD, infrastructure, and monitoring, through the DevOpsCrew. "
-         "Additionally, coordinate the integration of different services and components across the project. "
-         "Input: {project_name}, {devops_requirements}, {integration_points_list}, {release_schedule}.",
-    backstory="A seasoned engineer with strong experience in both DevOps practices and system integration. "
-              "Expert in automating software delivery pipelines, managing cloud infrastructure, and ensuring seamless interaction "
-              "between various microservices and application components. Bridges the gap between development and operations.",
+    goal="Streamline and manage DevOps processes (CI/CD, infrastructure, monitoring) via DevOpsCrew, and coordinate service/component integration. "
+         "Input: {project_name}, {devops_requirements}, {integration_points_list}, {release_schedule}. "
+         "Output: Detailed task lists, plans, or reports as required by the specific task. "
+         "You MUST always choose a valid action from your tools or provide a 'Final Answer'. Do not use 'Action: None'. "
+         "When using tools like 'Search a Code Docs content', ensure arguments like 'search_query' and 'docs_url' are direct strings, not dictionaries. "
+         "If a task requires outputting a list of items (e.g., DevOps tasks), format this list clearly in your 'Final Answer'.",
+    backstory="A seasoned engineer expert in DevOps, CI/CD, cloud infrastructure, and system integration. You bridge development and operations. "
+              "You meticulously plan and decompose requirements into actionable tasks. "
+              "When delegating or asking questions via tools like 'Delegate work to coworker' or 'Ask question to coworker', "
+              "you know that your available coworkers for these specific tools are the 'Web Project Coordinator' and the 'Backend Project Coordinator'. "
+              "You are precise with tool inputs and always aim for a clear, structured final output.",
     llm=specific_llm, # Assign the fetched LLM
     tools=get_tools_for_agent(AgentName.DEVOPS_COORDINATOR),
-    allow_delegation=True, # Can delegate tasks to DevOpsCrew or other relevant agents
+    allow_delegation=True,
     verbose=True
-    # tools=[...] # Tools for CI/CD management, infrastructure monitoring, API contract testing
 )
