@@ -386,34 +386,36 @@ class WorkflowOrchestrator:
             }
 
         # After guardrail execution, task.output is a TaskOutput object.
-        # If the guardrail was successful and returned (True, data),
-        # then task.output.exported_output should hold 'data'.
-        if taskmaster_task.output and taskmaster_task.output.success:
-            if isinstance(taskmaster_task.output.exported_output, dict):
-                # The guardrail (validate_taskmaster_yaml_output) has processed it.
-                # This dictionary will only contain project_name and refined_brief.
-                logging.info(f"Taskmaster workflow successful. Output from guardrail (exported_output): {taskmaster_task.output.exported_output}")
-                return taskmaster_task.output.exported_output
-            else:
-                logging.error(f"Taskmaster task.output.success was True, but task.output.exported_output was not a dict. Type: {type(taskmaster_task.output.exported_output).__name__}. Value: {taskmaster_task.output.exported_output}")
-                return {
-                    "project_name": "error_exported_output_not_dict",
-                    "refined_brief": "Taskmaster: Guardrail indicated success, but exported_output was not a dictionary.",
-                    "taskmaster_error": "Guardrail success but exported_output not dict."
-                }
+        # The guardrail's processed dictionary (if successful) should be in task.output.exported_output.
+        if taskmaster_task.output and isinstance(taskmaster_task.output.exported_output, dict):
+            # Guardrail was successful and returned a dictionary.
+            # This dictionary should contain 'project_name' and 'refined_brief'.
+            logging.info(f"Taskmaster workflow successful. Output from guardrail (exported_output): {taskmaster_task.output.exported_output}")
+            return taskmaster_task.output.exported_output
         else:
-            # Guardrail failed, or task execution failed before guardrail, or output is None.
-            error_message = "Taskmaster: Execution failed or guardrail reported failure."
+            # This means the guardrail failed, or did not produce a dict in exported_output,
+            # or task.output itself is None.
+            error_message = "Taskmaster: Guardrail failed or task output processing resulted in non-dict."
             raw_output_detail = ""
+            exported_output_detail = ""
+
             if taskmaster_task.output:
-                error_message = getattr(taskmaster_task.output, 'error', error_message) # Get specific error from guardrail if available
+                # Try to get a more specific error if the guardrail returned (False, "message")
+                # Note: CrewAI might place the guardrail's error message in task.output.raw if it's a simple string failure.
+                # Or, if an exception was raised and caught by CrewAI, it might be in task.output.error (less common for guardrails).
+                # For now, let's assume if exported_output is not a dict, the guardrail effectively failed or the task did.
                 if hasattr(taskmaster_task.output, 'raw') and isinstance(taskmaster_task.output.raw, str):
                     raw_output_detail = taskmaster_task.output.raw
+                if hasattr(taskmaster_task.output, 'exported_output'): # Check if exported_output exists
+                    exported_output_detail = str(taskmaster_task.output.exported_output) # Log what it was
+                    if isinstance(taskmaster_task.output.exported_output, str): # Guardrail might return (False, "error_string")
+                         error_message = f"Taskmaster: Guardrail returned error: {taskmaster_task.output.exported_output}"
 
-            logging.error(f"{error_message} Raw output (if any): '{raw_output_detail}'")
+
+            logging.error(f"{error_message} Exported_output was: '{exported_output_detail}'. Raw output (if any): '{raw_output_detail}'")
             return {
-                "project_name": "error_taskmaster_failed_or_guardrail_false",
-                "refined_brief": error_message,
+                "project_name": "error_taskmaster_processing_failed",
+                "refined_brief": error_message, # Provide more specific error if available
                 "taskmaster_error": error_message
             }
 
