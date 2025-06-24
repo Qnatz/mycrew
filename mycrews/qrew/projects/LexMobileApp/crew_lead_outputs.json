@@ -1,0 +1,62 @@
+```json
+{
+  "tasks": [
+    {
+      "task_type": "DataModelAgent",
+      "description": "Design the detailed database schema for LexMobileApp. This includes tables for Users (Clients, Firm Members), Cases, Documents, SecureMessages, Appointments, and AuditLogs. Specify all fields, data types, relationships (one-to-many, many-to-many), primary keys, foreign keys, and indexes. Ensure data models support case-specific document access and secure messaging threads."
+    },
+    {
+      "task_type": "StorageAgent",
+      "description": "Implement the database schema using a relational database (e.g., PostgreSQL) or a NoSQL database (e.g., MongoDB) based on the final decision from the architecture. Set up database connection pooling and necessary configurations for development, staging, and production environments."
+    },
+    {
+      "task_type": "AuthAgent",
+      "description": "Implement user registration and secure authentication API endpoints (/auth/register, /auth/login, /auth/refresh-token, /auth/forgot-password, /auth/reset-password). Use JWTs for session management. Implement role-based access control (RBAC) differentiating between Clients and Firm Members, ensuring clients can only access their own data."
+    },
+    {
+      "task_type": "ApiCreatorAgent",
+      "description": "Develop API endpoints for Case Management. This includes: GET /cases (list client's cases), POST /cases (admin only), GET /cases/{caseId} (view case details), PUT /cases/{caseId} (admin only). Ensure appropriate authorization checks."
+    },
+    {
+      "task_type": "ApiCreatorAgent",
+      "description": "Develop API endpoints for Document Management within cases. This includes: GET /cases/{caseId}/documents (list documents for a case), POST /cases/{caseId}/documents (upload document, firm members), GET /cases/{caseId}/documents/{documentId} (download/view document with secure access controls), DELETE /cases/{caseId}/documents/{documentId} (firm members). Implement secure file storage (e.g., S3 or equivalent)."
+    },
+    {
+      "task_type": "ApiCreatorAgent",
+      "description": "Develop API endpoints for Secure Messaging. This includes: GET /messages/threads (list message threads/contacts), GET /messages/threads/{threadId} (get messages in a thread), POST /messages/threads/{threadId} (send message). Implement logic for associating messages with cases where appropriate."
+    },
+    {
+      "task_type": "ApiCreatorAgent",
+      "description": "Develop API endpoints for Appointment Scheduling. This includes: GET /appointments (list client's appointments), POST /appointments/request (request an appointment), GET /firm-members/{memberId}/availability (optional, if direct scheduling is implemented), PUT /appointments/{appointmentId}/confirm (firm member confirms/modifies)."
+    },
+    {
+      "task_type": "ApiCreatorAgent",
+      "description": "Develop API endpoints for managing User Profiles (GET /profile, PUT /profile - limited client updates, more extensive firm member updates by admin)."
+    },
+    {
+      "task_type": "QueueAgent",
+      "description": "Implement a system for Push Notifications. This includes integrating with APNS (Apple Push Notification Service) and FCM (Firebase Cloud Messaging). Develop backend logic to trigger notifications for new messages, document uploads, appointment confirmations/reminders. Consider using a message queue for handling notification delivery."
+    },
+    {
+      "task_type": "ApiCreatorAgent",
+      "description": "If the 'Legal Information Resources' feature is included, develop API endpoints for managing and retrieving this content (e.g., GET /legal-resources, GET /legal-resources/{articleId}, POST /legal-resources (admin only))."
+    },
+    {
+      "task_type": "ConfigAgent",
+      "description": "Set up environment configurations for development, staging, and production (database credentials, API keys for external services like push notifications, file storage, email services for password reset)."
+    },
+    {
+      "task_type": "LoggerAgent",
+      "description": "Implement comprehensive logging across all API endpoints and critical backend processes. Ensure logs include timestamps, request IDs, user IDs (where applicable), and error details. Configure log aggregation and monitoring (e.g., ELK stack, CloudWatch)."
+    },
+    {
+      "task_type": "TesterAgent",
+      "description": "Develop unit tests for all API endpoints, business logic, and helper functions. Develop integration tests to verify interactions between different backend components (e.g., API to database, API to push notification service)."
+    },
+    {
+      "task_type": "DocumentationWriterAgent",
+      "description": "Generate API documentation (e.g., using Swagger/OpenAPI specifications) for all implemented endpoints, detailing request/response formats, authentication requirements, and error codes."
+    }
+  ]
+}
+```

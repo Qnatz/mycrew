@@ -145,24 +145,35 @@ class RichProjectReporter:
         self.console.print(Text("--- Key Project Artifacts ---", style="bold yellow", justify="center"))
         final_assembly_artifacts = self.state.get("artifacts", {}).get("final_assembly", {})
 
-        if final_assembly_artifacts.get("status") == "success_code_generation" and final_assembly_artifacts.get("generated_files"):
-            # Assuming generated_files is a list of file paths/names
-            generated_files_list = final_assembly_artifacts.get("generated_files", [])
-            if isinstance(generated_files_list, dict): # Adapt if it's a dict {path: content}
-                generated_files_list = list(generated_files_list.keys())
+        if isinstance(final_assembly_artifacts, dict):
+            if final_assembly_artifacts.get("status") == "success_code_generation" and final_assembly_artifacts.get("generated_files"):
+                # Assuming generated_files is a list of file paths/names
+                generated_files_list = final_assembly_artifacts.get("generated_files", [])
+                if isinstance(generated_files_list, dict): # Adapt if it's a dict {path: content}
+                    generated_files_list = list(generated_files_list.keys())
 
-            if generated_files_list:
-                files_table = Table(show_header=False, box=None, padding=(0,1))
-                files_table.add_column("File Path", style="green")
-                for file_path in generated_files_list[:5]:
-                    files_table.add_row(str(file_path)) # Ensure path is string
-                if len(generated_files_list) > 5:
-                    files_table.add_row(f"...and {len(generated_files_list) - 5} more files.")
-                self.console.print(files_table)
+                if generated_files_list:
+                    files_table = Table(show_header=False, box=None, padding=(0,1))
+                    files_table.add_column("File Path", style="green")
+                    for file_path in generated_files_list[:5]:
+                        files_table.add_row(str(file_path)) # Ensure path is string
+                    if len(generated_files_list) > 5:
+                        files_table.add_row(f"...and {len(generated_files_list) - 5} more files.")
+                    self.console.print(files_table)
+                else:
+                    self.console.print(Text("Code generation reported success, but no files listed.", style="italic yellow", justify="center"))
             else:
-                self.console.print(Text("Code generation reported success, but no files listed.", style="italic yellow", justify="center"))
-
+                # Fallback for dict but not matching success_code_generation criteria
+                arch_doc_md = self.state.get("artifacts",{}).get("architecture",{}).get("architecture_document_markdown","")
+                if arch_doc_md and len(arch_doc_md) > 10 : # Check if markdown seems substantial
+                    self.console.print(Text("- Architecture Document: Available (markdown)", style="green"))
+                else:
+                    self.console.print(Text("No specific final code artifacts listed or final assembly status not 'success_code_generation'. Check individual stage outputs.", style="italic yellow", justify="center"))
+        elif isinstance(final_assembly_artifacts, str):
+            self.console.print(Text(f"Final assembly artifacts are a string: '{final_assembly_artifacts}'", style="italic yellow", justify="center"))
+            self.console.print(Text("No specific final code artifacts listed. Check individual stage outputs.", style="italic yellow", justify="center"))
         else:
+            # Catch-all for other unexpected types or if final_assembly_artifacts is None/empty
             arch_doc_md = self.state.get("artifacts",{}).get("architecture",{}).get("architecture_document_markdown","")
             if arch_doc_md and len(arch_doc_md) > 10 : # Check if markdown seems substantial
                 self.console.print(Text("- Architecture Document: Available (markdown)", style="green"))
