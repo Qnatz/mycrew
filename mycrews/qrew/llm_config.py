@@ -12,12 +12,18 @@ llm_initialization_statuses = []
 # --- Environment Variable Based Model Names ---
 # User can override these via environment variables if needed
 _gemini_model_env_var = os.getenv("GEMINI_MODEL_NAME")
-if _gemini_model_env_var and "gemini" in _gemini_model_env_var.lower() and not _gemini_model_env_var.startswith("google_ai_studio/"):
-    USER_SPECIFIED_GEMINI_MODEL = "google_ai_studio/" + _gemini_model_env_var
-elif _gemini_model_env_var: # If set, but not gemini, or already correctly prefixed
+if _gemini_model_env_var and "gemini" in _gemini_model_env_var.lower():
+    if not _gemini_model_env_var.startswith("gemini/"):
+        # Remove common incorrect prefixes before adding the correct one
+        if _gemini_model_env_var.startswith("google_ai_studio/"):
+            _gemini_model_env_var = _gemini_model_env_var.replace("google_ai_studio/", "")
+        USER_SPECIFIED_GEMINI_MODEL = "gemini/" + _gemini_model_env_var
+    else: # Already correctly prefixed
+        USER_SPECIFIED_GEMINI_MODEL = _gemini_model_env_var
+elif _gemini_model_env_var: # If set, but not gemini (e.g. user specified a non-gemini model for this var)
     USER_SPECIFIED_GEMINI_MODEL = _gemini_model_env_var
 else: # Default if env var is not set
-    USER_SPECIFIED_GEMINI_MODEL = "google_ai_studio/gemini-1.5-flash"
+    USER_SPECIFIED_GEMINI_MODEL = "gemini/gemini-1.5-flash" # Corrected default prefix
 
 USER_SPECIFIED_OPENAI_MODEL = os.getenv("OPENAI_MODEL_NAME", "gpt-4o") # Default from user prompt
 
@@ -26,10 +32,10 @@ USER_SPECIFIED_OPENAI_MODEL = os.getenv("OPENAI_MODEL_NAME", "gpt-4o") # Default
 # but primary model selection should be flexible.
 VERIFIED_GEMINI_1_5_FLASH = USER_SPECIFIED_GEMINI_MODEL # Main user-specified Gemini
 # Fallback/alternative Gemini models (can be adjusted or expanded)
-VERIFIED_GEMINI_1_5_FLASH_8B = "google_ai_studio/gemini-1.5-flash-8b" # Added prefix
-VERIFIED_GEMINI_2_0_FLASH = "google_ai_studio/gemini-2.0-flash" # Added prefix
-VERIFIED_GEMINI_2_0_FLASH_LITE = "google_ai_studio/gemini-2.0-flash-lite-001" # Added prefix
-VERIFIED_GEMINI_2_5_FLASH_PREVIEW = "google_ai_studio/gemini-2.5-flash-preview-04-17" # Added prefix
+VERIFIED_GEMINI_1_5_FLASH_8B = "gemini/gemini-1.5-flash-8b" # Corrected prefix
+VERIFIED_GEMINI_2_0_FLASH = "gemini/gemini-2.0-flash" # Corrected prefix
+VERIFIED_GEMINI_2_0_FLASH_LITE = "gemini/gemini-2.0-flash-lite-001" # Corrected prefix
+VERIFIED_GEMINI_2_5_FLASH_PREVIEW = "gemini/gemini-2.5-flash-preview-04-17" # Corrected prefix
 
 
 # --- OpenAI Model Constants ---
@@ -164,15 +170,13 @@ MODEL_BY_AGENT = {
 def get_api_key_for_model(model_name: str) -> Optional[str]:
     """Determines the appropriate API key environment variable name based on the model provider."""
     model_lower = model_name.lower()
-    # Check for Google AI Studio Gemini models first
-    if model_lower.startswith("google_ai_studio/gemini"):
+    # Check for Google AI Studio Gemini models first (now expecting 'gemini/' prefix)
+    if model_lower.startswith("gemini/"): # This is the expected prefix for Google AI Studio via LiteLLM
         return os.getenv("GEMINI_API_KEY")
-    # Fallback for direct gemini/ prefix if it's ever used without google_ai_studio and means something else
-    elif model_lower.startswith("gemini/"): # Could be Vertex if not google_ai_studio
-        # This path might still lead to DefaultCredentialsError if ADC not set for Vertex
-        # but we prioritize explicit google_ai_studio calls with GEMINI_API_KEY
-        logger.warning(f"Model '{model_name}' starts with 'gemini/' but not 'google_ai_studio/'. Attempting GEMINI_API_KEY but Vertex AI might be assumed by LiteLLM without ADC.")
-        return os.getenv("GEMINI_API_KEY") # Or potentially a different key if Vertex had its own
+    # Keep a fallback for the old incorrect prefix during transition, with a warning
+    elif model_lower.startswith("google_ai_studio/gemini"):
+        logger.warning(f"Model '{model_name}' uses deprecated 'google_ai_studio/' prefix. Please update to 'gemini/'. Using GEMINI_API_KEY.")
+        return os.getenv("GEMINI_API_KEY")
     elif model_lower.startswith("gpt-") or model_lower.startswith("openai/"): # Common OpenAI prefixes
         return os.getenv("OPENAI_API_KEY")
     # Add other providers as needed:
