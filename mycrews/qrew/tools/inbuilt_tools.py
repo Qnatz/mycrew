@@ -29,6 +29,7 @@ import os # Ensure os is imported
 import chromadb # Added chromadb import
 # from chromadb.utils.embedding_functions import OnnxEmbeddingFunction # Removed
 from ..tools.onnx_embedder import ONNXEmbedder # Ensure this is present
+from ..llm_config import default_llm # Import default_llm
 from crewai.tools.base_tool import BaseTool  # Updated import path
 from pydantic import BaseModel, Field  # Updated to use standard Pydantic v2 imports
 
@@ -305,6 +306,14 @@ def configure_rag_tools(knowledge_bases: dict):
             if chroma_client and onnx_embedder_for_rag and onnx_embedder_for_rag.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY: # type: ignore
                 try:
                     collection_name = f"qrew_kb_{name.replace('_', '-')}"
+                    # Attempt to delete the collection first for a clean state
+                    try:
+                        chroma_client.delete_collection(name=collection_name)
+                        print(f"DEBUG_RAG_SETUP: Deleted existing collection '{collection_name}' for a clean setup.")
+                    except Exception as e_delete:
+                        # Log if deletion failed, but it might be because it doesn't exist, which is fine.
+                        print(f"DEBUG_RAG_SETUP: Note - Could not delete collection '{collection_name}' (may not exist or other issue): {e_delete}")
+
                     # Get or create the collection with our ONNXEmbedder instance
                     chroma_collection = chroma_client.get_or_create_collection(
                         name=collection_name,
@@ -354,24 +363,35 @@ def configure_rag_tools(knowledge_bases: dict):
                     # === END NEW/REVISED SECTION ===
 
                     current_tool_instance = RagTool(
-                        # source=path_or_config, # RagTool might not need source if vector_store is pre-populated
                         name=tool_name,
                         description=tool_description,
-                        vector_store=chroma_collection # Pass the pre-populated collection
+                        vector_store=chroma_collection, # Pass the pre-populated collection
+                        llm=default_llm # Explicitly pass the default LLM
                     )
-                    print(f"Initialized RAG tool for '{name}' using pre-populated ChromaDB collection '{collection_name}'.")
-                except Exception as e_rag_setup: # Changed variable name for clarity
-                    print(f"Warning: Failed to initialize RagTool for '{name}' with pre-configured ChromaDB collection and ONNXEmbedder: {e_rag_setup}.")
-                    # Fallback if specific setup fails
-                    current_tool_instance = RagTool(source=path_or_config, name=tool_name, description=tool_description) # This will likely use default OpenAI
-                    print(f"Initialized RAG tool for '{name}' with source '{path_or_config}' (ChromaDB/ONNXEmbedder setup failed, using RagTool default behavior).")
-            else:
-                # Fallback if chroma_client or onnx_embedder_for_rag is not available/ready
-                current_tool_instance = RagTool(source=path_or_config, name=tool_name, description=tool_description)
+                    if default_llm:
+                        print(f"Initialized RAG tool for '{name}' using pre-populated ChromaDB collection '{collection_name}' and default_llm.")
+                    else:
+                        print(f"Warning: Initialized RAG tool for '{name}' using pre-populated ChromaDB collection '{collection_name}' BUT default_llm was None. Tool may not function correctly for synthesis.")
+                except Exception as e_rag_setup:
+                    print(f"Warning: Failed to initialize RagTool for '{name}' with pre-configured ChromaDB, ONNXEmbedder, and default_llm: {e_rag_setup}.")
+                    # Fallback if specific setup fails - try without explicit LLM
+                    try:
+                        current_tool_instance = RagTool(name=tool_name, description=tool_description, vector_store=chroma_collection)
+                        print(f"Initialized RAG tool for '{name}' with pre-configured ChromaDB collection (fallback, no explicit LLM).")
+                    except Exception as e_rag_fallback:
+                        print(f"Warning: Fallback RagTool init for '{name}' also failed: {e_rag_fallback}. Using source-based RagTool.")
+                        current_tool_instance = RagTool(source=path_or_config, name=tool_name, description=tool_description)
+                        print(f"Initialized RAG tool for '{name}' with source '{path_or_config}' (ChromaDB/ONNXEmbedder/LLM setup failed, using RagTool default source behavior).")
+
+            else: # Fallback if chroma_client or onnx_embedder_for_rag is not available/ready
+                current_tool_instance = RagTool(source=path_or_config, name=tool_name, description=tool_description, llm=default_llm if default_llm else None)
                 if not chroma_client:
-                    print(f"Initialized RAG tool for '{name}' (Chroma client not available).")
+                    print(f"Initialized RAG tool for '{name}' (Chroma client not available, using source and default_llm if available).")
                 if not (onnx_embedder_for_rag and onnx_embedder_for_rag.EMBEDDING_SYSTEM_IMPORTED_SUCCESSFULLY): # type: ignore
-                    print(f"Initialized RAG tool for '{name}' (Project's ONNXEmbedder not available/ready).")
+                    print(f"Initialized RAG tool for '{name}' (Project's ONNXEmbedder not available/ready, using source and default_llm if available).")
+                if not default_llm:
+                    print(f"Warning: RAG tool for '{name}' initialized with source but default_llm is also None.")
+
 
             if current_tool_instance:
                 _configured_rag_tools[name] = current_tool_instance

@@ -301,20 +301,67 @@ class WorkflowOrchestrator:
                 "taskmaster_error": f"Error loading or processing tasks.yaml: {e}"
             }
 
-        # --- Simplified Task for LLM Connection Test ---
-        task_description_simple = f"What is 2+2? Respond with only the number and nothing else. User request was: '{user_request}'"
-        task_expected_output_simple = "A single number representing the sum of 2+2."
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            tasks_file_path = os.path.join(current_dir, "..", "taskmaster", "tasks.yaml")
+            with open(tasks_file_path, 'r') as f:
+                all_taskmaster_tasks_data = yaml.safe_load(f)
 
-        logging.info(f"DEBUG: Using simplified task for LLM connection test: '{task_description_simple}'")
+            if not all_taskmaster_tasks_data or 'tasks' not in all_taskmaster_tasks_data or not all_taskmaster_tasks_data['tasks']:
+                logging.error("Failed to load tasks from taskmaster/tasks.yaml or no tasks found.")
+                return {
+                    "project_name": "error_task_def_load_failed",
+                    "refined_brief": "Taskmaster failed: Could not load task definitions.",
+                    "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
+                    "taskmaster_error": "Failed to load task definitions from YAML."
+                }
+
+            task_data = all_taskmaster_tasks_data['tasks'][0] # Use the first task
+
+            # Prepare context for formatting, ensuring all potential keys are present
+            formatting_context = {
+                "user_request": user_request,
+                "project_goal_statement": inputs.get("project_goal_statement", ""), # Default if not provided
+                "priority_level": inputs.get("priority_level", "Normal") # Default if not provided
+                # Add other placeholders from the YAML task description here if any
+            }
+            try:
+                task_description = task_data['description'].format(**formatting_context)
+            except KeyError as ke:
+                logging.error(f"Missing key '{ke}' in formatting_context for Taskmaster task description. Provided: {formatting_context.keys()}")
+                return {
+                    "project_name": "error_task_desc_format_failed",
+                    "refined_brief": f"Taskmaster failed: Missing data for task description placeholder '{ke}'.",
+                    "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
+                    "taskmaster_error": f"Task description formatting error: missing '{ke}'."
+                }
+
+            task_expected_output = task_data['expected_output']
+
+        except FileNotFoundError:
+            logging.error(f"Taskmaster tasks.yaml not found at expected path: {tasks_file_path}")
+            return {
+                "project_name": "error_task_def_not_found",
+                "refined_brief": "Taskmaster failed: Task definition file not found.",
+                "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
+                "taskmaster_error": "Task definition file (tasks.yaml) not found."
+            }
+        except Exception as e:
+            logging.error(f"Error loading or processing Taskmaster tasks.yaml: {e}", exc_info=True)
+            return {
+                "project_name": "error_task_def_processing_failed",
+                "refined_brief": f"Taskmaster failed: Error processing task definitions - {e}.",
+                "is_new_project": True, "recommended_next_stage": "architecture", "project_scope": "unknown",
+                "taskmaster_error": f"Error loading or processing tasks.yaml: {e}"
+            }
 
         taskmaster_task = Task(
-            description=task_description_simple,
+            description=task_description,
             agent=taskmaster_agent,
-            expected_output=task_expected_output_simple,
-            guardrail=None, # No complex guardrail for this simple test
+            expected_output=task_expected_output, # Expected output from YAML
+            guardrail=validate_taskmaster_yaml_output, # Use the new guardrail
             max_retries=1
         )
-        # --- End Simplified Task ---
 
         task_crew = Crew(
             agents=[taskmaster_agent],
