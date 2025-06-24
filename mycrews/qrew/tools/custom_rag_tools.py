@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
 from chromadb import PersistentClient
 from .onnx_embedder import ONNXEmbedder # Assumes onnx_embedder.py is in the same 'tools' directory
-from crewai.llms.base import LLM as CrewAILLMBase # For type hinting the LLM
+from crewai import LLM as CrewAILLMBase # Corrected import for type hinting the LLM
 
 logger = logging.getLogger(__name__)
 
