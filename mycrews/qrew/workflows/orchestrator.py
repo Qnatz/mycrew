@@ -513,15 +513,16 @@ class WorkflowOrchestrator:
                 self.state = current_project_state_manager # Assign to self.state
 
                 # project_info from ProjectStateManager already contains name, id, path.
-                # We add/update other relevant info.
-                self.state.set_project_info("refined_brief", taskmaster_output_raw.get("refined_brief"))
-                self.state.set_project_info("is_new_project", is_truly_new_project) # Ensure this is explicitly set based on our check
+                # We add/update other relevant info by directly modifying the project_info dictionary.
+                self.state.project_info["refined_brief"] = taskmaster_output_raw.get("refined_brief")
+                self.state.project_info["is_new_project"] = is_truly_new_project # Ensure this is explicitly set based on our check
 
                 recommended_next_stage = "architecture"
                 project_scope = "unknown"
 
-                self.state.set_project_info("recommended_next_stage", recommended_next_stage)
-                self.state.set_project_info("project_scope", project_scope)
+                self.state.project_info["recommended_next_stage"] = recommended_next_stage
+                self.state.project_info["project_scope"] = project_scope
+                # Note: self.state.save_state() will be called by complete_stage, persisting these project_info changes.
 
                 logging.info(f"Project '{actual_project_name}' is_new_project (determined by ProjectStateManager): {is_truly_new_project}. Defaulted next_stage: '{recommended_next_stage}', scope: '{project_scope}'.")
 
@@ -535,7 +536,7 @@ class WorkflowOrchestrator:
                 # ProjectStateManager's __init__ handles initial state loading or creation.
                 # Now mark the 'taskmaster' stage as started and completed for this session.
                 self.state.start_stage("taskmaster")
-                self.state.complete_stage("taskmaster", artifacts=current_artifacts["taskmaster"])
+                self.state.complete_stage("taskmaster", artifacts=current_artifacts["taskmaster"]) # This also calls save_state()
                 initial_inputs["project_name"] = actual_project_name
 
                 stages_to_run.append("taskmaster")
