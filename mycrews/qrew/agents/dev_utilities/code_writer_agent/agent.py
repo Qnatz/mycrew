@@ -16,6 +16,6 @@ code_writer_agent = Agent(
     tools=get_tools_for_agent(AgentName.CODE_WRITER),
     knowledge_sources=[], # Added as per instruction
     type="common",
-    allow_delegation=False,
+    allow_delegation=True,
     verbose=True
 )
